@@ -27,13 +27,12 @@ def test_open_json():
     #               clear the count to 0
     # but do not scan the spreadsheet
     l1 = info2geojson.LoanInfo(test_locFileName,
-                               test_inputNames,
                                test_inputLoans,
                                test_loan_connsGeoJSON)
 
     assert l1.loc_data["Gloucester Ontario Canada"]["latitude"] == 45.4473421
 
-    l1.loc_data["Gloucester Ontario Canada"]["latitude"] == 99
+    l1.loc_data["Gloucester Ontario Canada"]["latitude"] = 99
     l1.write_location_DB()
     # output locations DB should still be correct
     #     and should equal the test check file
@@ -48,7 +47,7 @@ def test_open_json():
     assert not filecmp.cmp(test_locFileName,
                            test_initlocFileName, shallow=False)
 
-    l1.loc_data["Gloucester Ontario Canada"]["latitude"] == 45.4473421
+    l1.loc_data["Gloucester Ontario Canada"]["latitude"] = 45.4473421
     l1.write_location_DB()
 
     # output locations DB should be correct
@@ -58,12 +57,13 @@ def test_open_json():
     return True
 
 
-def test_a_one_row():
+def test_few_names():
     init_test_loc_file()
     l1 = info2geojson.LoanInfo(test_locFileName,
-                               test_inputNames,
                                test_inputLoans,
                                test_loan_connsGeoJSON)
+    l1.scan_names_spreadsheet(test_inputNames)
+
     assert filecmp.cmp(test_loan_connsGeoJSON,
                        "testData/test_A_oneLocConnRef.geojson", shallow=False)
     return True

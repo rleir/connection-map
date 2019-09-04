@@ -58,6 +58,7 @@ __status__ = "Production"
 
 from xlrd import open_workbook  # type: ignore
 # import os
+import math
 # import geopy    # pip install geopy
 # import geopy.geocoders
 from geopy.geocoders import GoogleV3
@@ -83,11 +84,9 @@ class LoanInfo:
 
     def __init__(self,
                  locFileName,
-                 inputNames,
                  inputLoans,
                  loansGeoJSON):
         self.locFileName  = locFileName
-        self.inputNames   = inputNames
         self.inputLoans   = inputLoans
         self.loansGeoJSON = loansGeoJSON
 
@@ -101,19 +100,22 @@ class LoanInfo:
         #   save in array
         #   close xlsx
         wb = open_workbook(xlsx_filename)
+        s_found    = None
         col_ids   = None
         for sheet in wb.sheets():
             shname = sheet.name
             if shname.endswith("Name"):
+                s_found = 1
                 for row in range(sheet.nrows):
                     if row == 0:
                         col_ids = self.get_address_columns(sheet, row)
                     else:
                         self.save_row_data(sheet, row, col_ids)
 
+        if s_found is None:
+            print("'Name' sheet not found in " + xlsx_filename)
         wb.release_resources()
         del wb
-        print(self.name_data)
 
     def get_address_columns(self, sheet, row):
         ''' determine which spreadsheet columns contain address info '''
@@ -162,9 +164,14 @@ class LoanInfo:
         name_rec["inst"] = sheet.cell(row, instCol).value
 
         seqKeyCol = col_ids["seqKeyCol"]
-        seqKey = sheet.cell(row, seqKeyCol).value
-        while seqKey < self.name_data.length():
-            self.name_data.append()
+        seqKey = math.floor( sheet.cell(row, seqKeyCol).value)
+
+        if seqKey < len(self.name_data):
+            print("Error seqkey "+ str(seqKey))
+            print("Error name length "+ str(len(self.name_data)))
+        while seqKey > len(self.name_data):
+            self.name_data.append({})
+
         self.name_data.append(name_rec)
         return
 
@@ -205,7 +212,6 @@ if __name__ == "__main__":
     # execute only if run as a script
 
     l1 = LoanInfo(default_locFileName,
-                  default_inputNames,
                   default_inputLoans,
                   default_loan_connsGeoJSON)
 
