@@ -64,6 +64,27 @@ def test_few_names():
                                test_loan_connsGeoJSON)
     l1.scan_names_spreadsheet(test_inputNames)
 
+    assert "addr" not in l1.name_data[0].keys()
+    assert "inst" not in l1.name_data[0].keys()
+    assert "addr" not in l1.name_data[1].keys()
+    assert "inst" not in l1.name_data[1].keys()
+
+    assert l1.name_data[2]["addr"] == 'Ottawa Ontario Canada'
+    assert l1.name_data[2]["inst"] == 'Smith & Mineral Club'
+
+    assert "addr" not in l1.name_data[3].keys()
+    assert "inst" not in l1.name_data[3].keys()
+
+    assert l1.name_data[8]["addr"] == 'Cornwall Ontario Canada'
+    assert l1.name_data[8]["inst"] == "Yea's Donuts"
+
+
+def test_few_loans():
+    init_test_loc_file()
+    l1 = info2geojson.LoanInfo(test_locFileName,
+                               test_inputLoans,
+                               test_loan_connsGeoJSON)
+    l1.scan_names_spreadsheet(test_inputNames)
     assert filecmp.cmp(test_loan_connsGeoJSON,
                        "testData/test_A_oneLocConnRef.geojson", shallow=False)
     return True
