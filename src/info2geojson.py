@@ -56,7 +56,7 @@ __maintainer__ = "Richard Leir"
 __email__ = "rleir at leirtech ddot com"
 __status__ = "Production"
 
-from xlrd import open_workbook  # type: ignore
+import xlrd
 # import os
 import math
 # import geopy    # pip install geopy
@@ -99,7 +99,7 @@ class LoanInfo:
         # for each name row
         #   save in array
         #   close xlsx
-        wb = open_workbook(xlsx_filename)
+        wb = xlrd.open_workbook(xlsx_filename)
         s_found    = None
         col_ids   = None
         for sheet in wb.sheets():
@@ -116,6 +116,7 @@ class LoanInfo:
             print("'Name' sheet not found in " + xlsx_filename)
         wb.release_resources()
         del wb
+        print(self.name_data)
 
     def get_address_columns(self, sheet, row):
         ''' determine which spreadsheet columns contain address info '''
@@ -128,7 +129,7 @@ class LoanInfo:
         col_ids    = {}
 
         for col in range(sheet.ncols):
-            hdr = sheet.cell(row, col).value
+            hdr = sheet.cell_value(row, col)
             if "INST2" == hdr:
                 instCol = col
                 col_ids["instCol"] = instCol
@@ -146,13 +147,13 @@ class LoanInfo:
         col_ids["addrCols"] = addrCols
         return col_ids
 
-    def save_row_data(self, sheet, row,  col_ids):
+    def save_row_data(self, sheet, rowx,  col_ids):
         ''' get address info from a spreadsheet row '''
         addrCols = col_ids["addrCols"]
         addr = ""
         for col in range(sheet.ncols):
             if col in addrCols:
-                addr += sheet.cell(row, col).value
+                addr += sheet.cell_value(rowx, col)
                 addr += ' '
         addr = addr.rstrip()  # remove the last space
         addr = addr.lstrip()  # remove any leading spaces
@@ -161,10 +162,15 @@ class LoanInfo:
 
         name_rec = {}
         name_rec["addr"] = addr
-        name_rec["inst"] = sheet.cell(row, instCol).value
+        name_rec["inst"] = sheet.cell_value(rowx, instCol)
 
-        seqKeyCol = col_ids["seqKeyCol"]
-        seqKey = math.floor( sheet.cell(row, seqKeyCol).value)
+        colx = col_ids["seqKeyCol"]
+
+        cty = sheet.cell_type(rowx, colx)
+        # XL_CELL_NUMBER indicates a float
+        if not cty == xlrd.XL_CELL_NUMBER:
+            print("Error: cell type "+ str(cty))
+        seqKey = math.floor( sheet.cell_value(rowx, colx))
 
         if seqKey < len(self.name_data):
             print("Error seqkey "+ str(seqKey))
@@ -180,7 +186,7 @@ class LoanInfo:
         # for each name row
         #   save in array
         #   close xlsx
-        wb = open_workbook(xlsx_filename)
+        wb = xlrd.open_workbook(xlsx_filename)
         col_ids   = None
         for sheet in wb.sheets():
             shname = sheet.name
