@@ -41,7 +41,7 @@ data row
 """
 
 # names list gives shorter list of places
-# names list indexed by seq
+
 
 # places are mostly ends of a connection
 # loans list is just for a count giving line width
@@ -78,9 +78,13 @@ default_loan_connsGeoJSON = 'loans.geojson'
 
 class LoanInfo:
 
+    # location information, read from a file.
+    # when a locatn is missing, we google to fill it in and then save to file.
     loc_data = {}  # type: Dict
-    name_data = []  # type: List
     locations_changed = False
+
+    # names_data list is indexed by seq, and it has gaps (missing entries)
+    name_data = []  # type: List
 
     def __init__(self,
                  locFileName,
