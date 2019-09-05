@@ -116,7 +116,6 @@ class LoanInfo:
             print("'Name' sheet not found in " + xlsx_filename)
         wb.release_resources()
         del wb
-        print(self.name_data)
 
     def get_address_columns(self, sheet, row):
         ''' determine which spreadsheet columns contain address info '''
@@ -169,12 +168,12 @@ class LoanInfo:
         cty = sheet.cell_type(rowx, colx)
         # XL_CELL_NUMBER indicates a float
         if not cty == xlrd.XL_CELL_NUMBER:
-            print("Error: cell type "+ str(cty))
-        seqKey = math.floor( sheet.cell_value(rowx, colx))
+            print("Error: cell type " + str(cty))
+        seqKey = math.floor(sheet.cell_value(rowx, colx))
 
         if seqKey < len(self.name_data):
-            print("Error seqkey "+ str(seqKey))
-            print("Error name length "+ str(len(self.name_data)))
+            print("Error seqkey " + str(seqKey))
+            print("Error name length " + str(len(self.name_data)))
         while seqKey > len(self.name_data):
             self.name_data.append({})
 
