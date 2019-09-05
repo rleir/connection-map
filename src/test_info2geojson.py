@@ -10,7 +10,7 @@ test_initlocFileName = "testData/InitLoc.json"
 # the test loc DB
 test_locFileName = "testData/testLoc.json"
 
-test_inputNames  = "testData/nameTest.xlsx"
+test_inputNames  = "testData/NameTest.xlsx"
 test_inputLoans  = "testData/loanTest.xlsx"
 test_loan_connsGeoJSON = "testData/loanTest.geojson"
 
