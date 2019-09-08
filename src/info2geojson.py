@@ -29,6 +29,18 @@ for each connection location
     (by summing date ranges)
   save inst names for a popup
 
+for each loan
+  use seq to find name record
+    increment the loan counter
+
+for each name
+  if there are loans
+    add to conn list
+    if address exists
+      bump name cont
+    else
+      add new conn with name count of 1
+
 write in new format
 
 data row
@@ -88,10 +100,8 @@ class LoanInfo:
 
     def __init__(self,
                  locFileName,
-                 inputLoans,
                  loansGeoJSON):
         self.locFileName  = locFileName
-        self.inputLoans   = inputLoans
         self.loansGeoJSON = loansGeoJSON
 
         # read existing locations, zero each count
@@ -104,8 +114,8 @@ class LoanInfo:
         #   save in array
         #   close xlsx
         wb = xlrd.open_workbook(xlsx_filename)
-        s_found    = None
-        col_ids   = None
+        s_found = None
+        col_ids = None
         for sheet in wb.sheets():
             shname = sheet.name
             if shname.endswith("Name"):
@@ -114,7 +124,7 @@ class LoanInfo:
                     if row == 0:
                         col_ids = self.get_address_columns(sheet, row)
                     else:
-                        self.save_row_data(sheet, row, col_ids)
+                        self.save_address_data(sheet, row, col_ids)
 
         if s_found is None:
             print("'Name' sheet not found in " + xlsx_filename)
@@ -123,8 +133,6 @@ class LoanInfo:
 
     def get_address_columns(self, sheet, row):
         ''' determine which spreadsheet columns contain address info '''
-        seqKeyCol  = None
-        instCol    = None
         cityCol    = None
         provCol    = None
         countryCol = None
@@ -134,8 +142,7 @@ class LoanInfo:
         for col in range(sheet.ncols):
             hdr = sheet.cell_value(row, col)
             if "INST2" == hdr:
-                instCol = col
-                col_ids["instCol"] = instCol
+                col_ids["instCol"] = col
             elif "CITY" == hdr:
                 cityCol = col
             elif "PROV" == hdr:
@@ -143,14 +150,13 @@ class LoanInfo:
             elif "COUNTRY" == hdr:
                 countryCol = col
             elif "NameSeq" == hdr:
-                seqKeyCol = col
-                col_ids["seqKeyCol"] = seqKeyCol
+                col_ids["seqKeyCol"] = col
 
         addrCols = (cityCol,  provCol,  countryCol)
         col_ids["addrCols"] = addrCols
         return col_ids
 
-    def save_row_data(self, sheet, rowx,  col_ids):
+    def save_address_data(self, sheet, rowx,  col_ids):
         ''' get address info from a spreadsheet row '''
         addrCols = col_ids["addrCols"]
         addr = ""
@@ -166,7 +172,7 @@ class LoanInfo:
         name_rec = {}
         name_rec["addr"] = addr
         name_rec["inst"] = sheet.cell_value(rowx, instCol)
-
+        name_rec["loans"] = 0
         colx = col_ids["seqKeyCol"]
 
         cty = sheet.cell_type(rowx, colx)
@@ -185,28 +191,43 @@ class LoanInfo:
         return
 
     def scan_loans_spreadsheet(self, xlsx_filename):
-        # read xls
-        # for each name row
-        #   save in array
-        #   close xlsx
         wb = xlrd.open_workbook(xlsx_filename)
-        col_ids   = None
+        s_found = None
+        col_ids = None
         for sheet in wb.sheets():
             shname = sheet.name
             if shname.endswith("LOAN1"):
+                s_found = 1
                 for row in range(sheet.nrows):
                     if row == 0:
                         col_ids = self.get_key_columns(sheet, row)
                     else:
-                        self.save_zzz_data(sheet, row, col_ids)
-
+                        self.save_key_data(sheet, row, col_ids)
+        if s_found is None:
+            print("'Name' sheet not found in " + xlsx_filename)
         wb.release_resources()
         del wb
 
-    def get_key_columns(self, sheet, row):
-        pass
+    def get_key_columns(self, sheet, rowx):
+        col_ids = {}
+        for colx in range(sheet.ncols):
+            hdr = sheet.cell_value(rowx, colx)
+            if "SeqFromName" == hdr:
+                col_ids["seqFromCol"] = colx
+            elif "DATE" == hdr:
+                col_ids["date"] = colx
+        return col_ids
 
-    def save_zzz_data(self, sheet, row, col_ids):
+    def save_key_data(self, sheet, rowx, col_ids):
+        colx = col_ids["seqFromCol"]
+        seq = sheet.cell_value(rowx, colx)
+
+        if seq not in self.name_data[seq].keys():
+            print("name seq missing " + str(seq))
+
+        self.name_data[seq]["loans"] += 1
+
+    def make_conn_list(self):
         pass
 
     def write_location_DB(self):
@@ -221,9 +242,9 @@ if __name__ == "__main__":
     # execute only if run as a script
 
     l1 = LoanInfo(default_locFileName,
-                  default_inputLoans,
                   default_loan_connsGeoJSON)
 
     l1.scan_names_spreadsheet(default_inputNames)
     l1.scan_loans_spreadsheet(default_inputLoans)
+    l1.make_conn_list()
     l1.write_location_DB()
