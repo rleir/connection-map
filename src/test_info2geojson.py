@@ -11,7 +11,7 @@ test_initlocFileName = "testData/InitLoc.json"
 test_locFileName = "testData/testLoc.json"
 
 test_inputNames  = "testData/NameTest.xlsx"
-test_inputLoans  = "testData/loanTest.xlsx"
+test_inputLoans  = "testData/LoansTest.xlsx"
 test_loan_connsGeoJSON = "testData/loanTest.geojson"
 
 

@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
 """
-Handy utility to add latlong data to a xls for use in a d3js map.
+Handy utility to get latlong data from an xlsx for use in a d3js map.
   read input names xls data file
   find the address cols
-  read the loans file
-
-
-  find the zzz cols from the xls
+  accumulate country state province
+  read in locations db
   google to find any unknown latlongs
-
-  write a file for
-  write a file for
-
-
-
-read in locations
-
+  read the loans file
+  find the key cols from the xls
 for each loan
+find the corresponding address
+
+
   get the I/O, date
   find a name
   get the address and date
-  accumulate country state province
+
     (by date range)
 
 for each connection location
@@ -204,7 +199,7 @@ class LoanInfo:
                     else:
                         self.save_key_data(sheet, row, col_ids)
         if s_found is None:
-            print("'Name' sheet not found in " + xlsx_filename)
+            print("'LOAN' sheet not found in " + xlsx_filename)
         wb.release_resources()
         del wb
 
@@ -220,7 +215,7 @@ class LoanInfo:
 
     def save_key_data(self, sheet, rowx, col_ids):
         colx = col_ids["seqFromCol"]
-        seq = sheet.cell_value(rowx, colx)
+        seq = math.floor(sheet.cell_value(rowx, colx))
 
         if seq not in self.name_data[seq].keys():
             print("name seq missing " + str(seq))
