@@ -42,9 +42,6 @@ data row
   target latlon
   magnitude
   name for popup
-
-
-
 """
 
 # names list gives shorter list of places
@@ -80,7 +77,7 @@ default_inputLoans = "loans.xlsx"
 default_locFileName = 'locations.json'
 
 # Output loan-connections file
-default_loan_connsGeoJSON = 'loans.geojson'
+default_loan_conns = 'loan_conns.csv'
 
 
 class LoanInfo:
@@ -94,10 +91,8 @@ class LoanInfo:
     name_data = []  # type: List
 
     def __init__(self,
-                 locFileName,
-                 loansGeoJSON):
+                 locFileName):
         self.locFileName  = locFileName
-        self.loansGeoJSON = loansGeoJSON
 
         # read existing locations, zero each count
         with open(self.locFileName) as json_file:
@@ -222,8 +217,24 @@ class LoanInfo:
 
         self.name_data[seq]["loans"] += 1
 
-    def make_conn_list(self):
-        pass
+    def make_conn_list(self, filename):
+        OTTAWA_LON_LAT = ("-75.697", "45.421")
+        f = open('filename', 'w')
+        f.write('long1,long2,lat1,lat2\n')
+        for name in self.name_data:
+            name_addr = name["addr"]
+            if name_addr in self.loc_data.keys():
+                coords = self.loc_data[name_addr]
+                zlon = coords["longitude"]
+                zlat = coords["latitude"]
+                row =  OTTAWA_LON_LAT[0] + ','
+                row += zlon + ','
+                row += OTTAWA_LON_LAT[1] + ','
+                row += zlat + '\n'
+                f.write(row)
+            else:
+                print("location missing for " + name_addr)
+        f.close()
 
     def write_location_DB(self):
         if self.locations_changed:
@@ -236,10 +247,9 @@ class LoanInfo:
 if __name__ == "__main__":
     # execute only if run as a script
 
-    l1 = LoanInfo(default_locFileName,
-                  default_loan_connsGeoJSON)
+    l1 = LoanInfo(default_locFileName)
 
     l1.scan_names_spreadsheet(default_inputNames)
     l1.scan_loans_spreadsheet(default_inputLoans)
-    l1.make_conn_list()
+    l1.make_conn_list(default_loan_conns)
     l1.write_location_DB()
