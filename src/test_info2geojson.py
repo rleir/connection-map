@@ -12,7 +12,7 @@ test_locFileName = "testData/testLoc.json"
 
 test_inputNames  = "testData/NameTest.xlsx"
 test_inputLoans  = "testData/LoansTest.xlsx"
-test_loan_connsGeoJSON = "testData/loanTest.geojson"
+test_loan_conns = "testData/loanTest.csv"
 
 
 def init_test_loc_file():
@@ -26,8 +26,7 @@ def test_open_json():
     # read the locations json and initialize data structures:
     #               clear the count to 0
     # but do not scan the spreadsheet
-    l1 = info2geojson.LoanInfo(test_locFileName,
-                               test_loan_connsGeoJSON)
+    l1 = info2geojson.LoanInfo(test_locFileName)
 
     assert l1.loc_data["Gloucester Ontario Canada"]["latitude"] == 45.4473421
 
@@ -58,8 +57,7 @@ def test_open_json():
 
 def test_few_names():
     init_test_loc_file()
-    l1 = info2geojson.LoanInfo(test_locFileName,
-                               test_loan_connsGeoJSON)
+    l1 = info2geojson.LoanInfo(test_locFileName)
     l1.scan_names_spreadsheet(test_inputNames)
 
     assert "addr" not in l1.name_data[0].keys()
@@ -79,13 +77,21 @@ def test_few_names():
 
 def test_few_loans():
     init_test_loc_file()
-    l1 = info2geojson.LoanInfo(test_locFileName,
-                               test_loan_connsGeoJSON)
+    l1 = info2geojson.LoanInfo(test_locFileName)
     l1.scan_names_spreadsheet(test_inputNames)
     l1.scan_loans_spreadsheet(test_inputLoans)
 
     assert l1.name_data[8]["loans"] == 2
 
-    # assert filecmp.cmp(test_loan_connsGeoJSON,
-    # "testData/test_A_oneLocConnRef.geojson", shallow=False)
+    return True
+
+
+def test_write_conns():
+    init_test_loc_file()
+    l1 = info2geojson.LoanInfo(test_locFileName)
+    l1.scan_names_spreadsheet(test_inputNames)
+    l1.scan_loans_spreadsheet(test_inputLoans)
+    l1.make_conn_list(test_loan_conns)
+    # assert filecmp.cmp(test_loan_conns,
+    # "testData/test_A_oneLocConnRef.csv", shallow=False)
     return True
