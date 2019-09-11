@@ -10,9 +10,9 @@ test_initlocFileName = "testData/InitLoc.json"
 # the test loc DB
 test_locFileName = "testData/testLoc.json"
 
-test_inputNames  = "testData/NameTest.xlsx"
-test_inputLoans  = "testData/LoansTest.xlsx"
-test_loan_conns = "testData/loanTest.csv"
+test_inputNames = "testData/NameTest.xlsx"
+test_inputLoans = "testData/LoansTest.xlsx"
+test_loan_conns = "testData/LoanConnsTest.csv"
 
 
 def init_test_loc_file():
@@ -74,6 +74,8 @@ def test_few_names():
     assert l1.name_data[8]["addr"] == 'Cornwall Ontario Canada'
     assert l1.name_data[8]["inst"] == "Yea's Donuts"
 
+    return True
+
 
 def test_few_loans():
     init_test_loc_file()
@@ -81,7 +83,11 @@ def test_few_loans():
     l1.scan_names_spreadsheet(test_inputNames)
     l1.scan_loans_spreadsheet(test_inputLoans)
 
-    assert l1.name_data[8]["loans"] == 2
+    assert "loans" not in l1.name_data[1].keys()
+    assert l1.name_data[2]["loans"] == 2
+    assert "loans" not in l1.name_data[3].keys()
+    assert l1.name_data[7]["loans"] == 3
+    assert l1.name_data[8]["loans"] == 1
 
     return True
 
@@ -92,6 +98,6 @@ def test_write_conns():
     l1.scan_names_spreadsheet(test_inputNames)
     l1.scan_loans_spreadsheet(test_inputLoans)
     l1.make_conn_list(test_loan_conns)
-    # assert filecmp.cmp(test_loan_conns,
-    # "testData/test_A_oneLocConnRef.csv", shallow=False)
+    assert filecmp.cmp(test_loan_conns,
+                       "testData/test_A_oneLocConnRef.csv", shallow=False)
     return True

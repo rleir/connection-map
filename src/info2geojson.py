@@ -92,6 +92,8 @@ class LoanInfo:
 
     def __init__(self,
                  locFileName):
+        self.name_data = []  # type: List
+
         self.locFileName  = locFileName
 
         # read existing locations, zero each count
@@ -212,10 +214,19 @@ class LoanInfo:
         colx = col_ids["seqFromCol"]
         seq = math.floor(sheet.cell_value(rowx, colx))
 
-        if seq not in self.name_data[seq].keys():
-            print("name seq missing " + str(seq))
+        # a seq key of 0 indicates there is no name record
+        if seq == 0:
+            return
+        # check length
+        # check for "loans"
+        if seq > len(self.name_data) - 1:
+            print("Error: name seq out of range  " + str(seq))
+            print(self.name_data)
+        elif "loans" not in self.name_data[seq].keys():
+            print("Error: loans key missing " + str(seq))
 
-        self.name_data[seq]["loans"] += 1
+        else:
+            self.name_data[seq]["loans"] += 1
 
     def make_conn_list(self, filename):
         OTTAWA_LON_LAT = ("-75.697", "45.421")
