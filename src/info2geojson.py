@@ -212,8 +212,14 @@ class LoanInfo:
 
     def save_key_data(self, sheet, rowx, col_ids):
         colx = col_ids["seqFromCol"]
-        seq = math.floor(sheet.cell_value(rowx, colx))
-
+        cval = sheet.cell_value(rowx, colx)
+        if cval == "":
+            return
+        try:
+            seq = math.floor(cval)
+        except TypeError:
+            print("Error: typeerr row col ", str(rowx), str(colx), str(cval))
+            return
         # a seq key of 0 indicates there is no name record
         if seq == 0:
             return
