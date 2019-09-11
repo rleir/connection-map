@@ -178,7 +178,6 @@ class LoanInfo:
             print("Error name length " + str(len(self.name_data)))
         while seqKey > len(self.name_data):
             self.name_data.append({})
-
         self.name_data.append(name_rec)
         return
 
@@ -226,8 +225,8 @@ class LoanInfo:
         # check length
         # check for "loans"
         if seq > len(self.name_data) - 1:
-            print("Error: name seq out of range  " + str(seq))
-            print(self.name_data)
+            print("Error: seq in loans, max seq in names ",
+                  str(seq), len(self.name_data))
         elif "loans" not in self.name_data[seq].keys():
             print("Error: loans key missing " + str(seq))
 
