@@ -99,5 +99,5 @@ def test_write_conns():
     l1.scan_loans_spreadsheet(test_inputLoans)
     l1.make_conn_list(test_loan_conns)
     assert filecmp.cmp(test_loan_conns,
-                       "testData/test_A_oneLocConnRef.csv", shallow=False)
+                       "testData/LoanConnsTestRef.csv", shallow=False)
     return True

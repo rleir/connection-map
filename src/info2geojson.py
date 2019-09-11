@@ -230,18 +230,26 @@ class LoanInfo:
 
     def make_conn_list(self, filename):
         OTTAWA_LON_LAT = ("-75.697", "45.421")
-        f = open('filename', 'w')
-        f.write('long1,long2,lat1,lat2\n')
+        f = open(filename, 'w')
+        f.write('long1,long2,lat1,lat2,loan_count\n')
         for name in self.name_data:
+            if "addr" not in name.keys():
+                continue
+            loan_count = name["loans"]
             name_addr = name["addr"]
+            # skip loans to Ottawa, they would not display well
+            #  (or maybe they would?)
+            if name_addr == "Ottawa Ontario Canada":
+                continue
             if name_addr in self.loc_data.keys():
                 coords = self.loc_data[name_addr]
                 zlon = coords["longitude"]
                 zlat = coords["latitude"]
                 row =  OTTAWA_LON_LAT[0] + ','
-                row += zlon + ','
+                row += str(zlon) + ','
                 row += OTTAWA_LON_LAT[1] + ','
-                row += zlat + '\n'
+                row += str(zlat) + ','
+                row += str(loan_count) + '\n'
                 f.write(row)
             else:
                 print("location missing for " + name_addr)
