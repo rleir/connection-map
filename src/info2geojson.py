@@ -238,8 +238,10 @@ class LoanInfo:
         f = open(filename, 'w')
         f.write('long1,long2,lat1,lat2,loan_count\n')
         for name in self.name_data:
+            # names are sparse, so check if this record contains info
             if "addr" not in name.keys():
                 continue
+
             loan_count = name["loans"]
             name_addr = name["addr"]
             # skip loans to Ottawa, they would not display well
