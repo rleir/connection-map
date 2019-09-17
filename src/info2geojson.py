@@ -61,13 +61,9 @@ __email__ = "rleir at leirtech ddot com"
 __status__ = "Production"
 
 import xlrd
-# import os
 import math
-# import geopy    # pip install geopy
-# import geopy.geocoders
-from geopy.geocoders import GoogleV3
 import json
-# zzzz from geojsonfile import write_geojson_file
+from geolocdb import geolocdb
 
 # input xlsx spreadsheets
 default_inputNames = "names.xlsx"
@@ -82,11 +78,6 @@ default_loan_conns = 'loan_conns.csv'
 
 class LoanInfo:
 
-    # location information, read from a file.
-    # when a locatn is missing, we google to fill it in and then save to file.
-    loc_data = {}  # type: Dict
-    locations_changed = False
-
     # names_data list is indexed by seq, and it has gaps (missing entries)
     name_data = []  # type: List
 
@@ -94,11 +85,10 @@ class LoanInfo:
                  locFileName):
         self.name_data = []  # type: List
 
-        self.locFileName  = locFileName
-
-        # read existing locations, zero each count
-        with open(self.locFileName) as json_file:
-            self.loc_data = json.load(json_file)
+        # location information, read from a file.
+        # when a location is missing,
+        #   we google to fill it in and then save to file.
+        self.loc_db = geolocdb(filename=locFileName)
 
     def scan_names_spreadsheet(self, xlsx_filename):
         # read xls
@@ -110,7 +100,7 @@ class LoanInfo:
         col_ids = None
         for sheet in wb.sheets():
             shname = sheet.name
-            if shname.endswith("Name"):
+            if shname.startswith("Name"):
                 s_found = 1
                 for row in range(sheet.nrows):
                     if row == 0:
@@ -248,8 +238,8 @@ class LoanInfo:
             #  (or maybe they would?)
             if name_addr == "Ottawa Ontario Canada":
                 continue
-            if name_addr in self.loc_data.keys():
-                coords = self.loc_data[name_addr]
+            coords = self.loc_db.get_address(name_addr)
+            if coords is not None:
                 zlon = coords["longitude"]
                 zlat = coords["latitude"]
                 row =  OTTAWA_LON_LAT[0] + ','
@@ -263,11 +253,7 @@ class LoanInfo:
         f.close()
 
     def write_location_DB(self):
-        if self.locations_changed:
-            # update the location DB file
-            filename = self.locFileName
-            with open(filename, 'w', encoding='utf8') as json_file:
-                json.dump(self.loc_data, json_file)
+        self.loc_db.write_location_DB()
 
 
 if __name__ == "__main__":
