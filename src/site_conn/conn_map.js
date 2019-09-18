@@ -16,7 +16,7 @@ var path = d3.geoPath()
 // Load world shape AND list of connection
 d3.queue()
   .defer(d3.json, "world.geojson")  // World shape
-  .defer(d3.csv,  "data_connectionmap.csv") // Position of circles
+  .defer(d3.csv,  "loan_conns.csv") // Position of circles data_connectionmap.csv
   .await(ready);
 
 function ready(error, dataGeo, data) {
