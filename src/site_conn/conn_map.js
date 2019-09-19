@@ -26,7 +26,7 @@ function ready(error, dataGeo, data) {
     data.forEach(function(row){
       source = [+row.long1, +row.lat1]
       target = [+row.long2, +row.lat2]
-      topush = {type: "LineString", coordinates: [source, target]}
+      topush = {type: "LineString", coordinates: [source, target], loan_count: row.loan_count}
       link.push(topush)
     })
 
@@ -47,9 +47,9 @@ function ready(error, dataGeo, data) {
       .data(link)
       .enter()
       .append("path")
+        .attr("class", "loan-conns")
         .attr("d", function(d){ return path(d)})
         .style("fill", "none")
         .style("stroke", "#69b3a2")
-        .style("stroke-width", 2)
-
+        .style("stroke-width", function(d){ return d.loan_count})
 }
