@@ -226,7 +226,7 @@ class LoanInfo:
     def make_conn_list(self, filename):
         OTTAWA_LON_LAT = ("-75.697", "45.421")
         f = open(filename, 'w')
-        f.write('long1,long2,lat1,lat2,loan_count\n')
+        f.write('long1,long2,lat1,lat2,placename,loan_count\n')
         for name in self.name_data:
             # names are sparse, so check if this record contains info
             if "addr" not in name.keys():
@@ -238,6 +238,10 @@ class LoanInfo:
             #  (or maybe they would?)
             if name_addr == "Ottawa Ontario Canada":
                 continue
+
+            # remove any commas
+            nocomma_addr = name_addr.replace(',', ' ')
+
             coords = self.loc_db.get_address(name_addr)
             if coords is not None:
                 zlon = coords["longitude"]
@@ -246,6 +250,7 @@ class LoanInfo:
                 row += str(zlon) + ','
                 row += OTTAWA_LON_LAT[1] + ','
                 row += str(zlat) + ','
+                row += str(nocomma_addr) + ','
                 row += str(loan_count) + '\n'
                 f.write(row)
             else:
