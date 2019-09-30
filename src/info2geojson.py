@@ -64,6 +64,7 @@ import xlrd
 import math
 import json
 from geolocdb import geolocdb
+from geojsonfile import write_geojson_file
 
 # input xlsx spreadsheets
 default_inputNames = "names.xlsx"
@@ -73,7 +74,8 @@ default_inputLoans = "loans.xlsx"
 default_locFileName = 'locations.json'
 
 # Output loan-connections file
-default_loan_conns = 'loan_conns.csv'
+default_loan_conns    = 'loan_conns.csv'
+default_loan_conns_gj = 'loan_conns_geojson.js'
 
 
 class LoanInfo:
@@ -223,6 +225,41 @@ class LoanInfo:
         else:
             self.name_data[seq]["loans"] += 1
 
+    def write_conn_geojson(self, filename):
+        all_data = {}
+
+        for name in self.name_data:
+            # names are sparse, so check if this record contains info
+            if "addr" not in name.keys():
+                continue
+
+            name_addr = name["addr"]
+            # skip loans to Ottawa, they would not display well
+            #  (or maybe they would?)
+            if name_addr == "Ottawa Ontario Canada":
+                continue
+
+            coords = self.loc_db.get_address(name_addr)
+            if coords is not None:
+                # zlon = coords["longitude"]
+                # zlat = coords["latitude"]
+                # print(coords)
+                # zzzzzzzzzzzzzzzz
+                # geo_loc = {}
+                # geo_loc["latitude"]  = coords.latitude
+                # geo_loc["longitude"] = coords.longitude
+                # geo_loc["address"]   = coords.address
+                coords["org names"] = "zzz"
+                coords["magnitude"] = name["loans"]
+
+                all_data[name_addr] = coords
+                # zzzzzzzzzzzzzzzz
+
+        with open("tempdbg.json", 'w', encoding='utf8') as json_file:
+            json.dump(all_data, json_file)
+
+        write_geojson_file(all_data, filename, and_properties=True)
+
     def make_conn_list(self, filename):
         OTTAWA_LON_LAT = ("-75.697", "45.421")
         f = open(filename, 'w')
@@ -246,7 +283,7 @@ class LoanInfo:
             if coords is not None:
                 zlon = coords["longitude"]
                 zlat = coords["latitude"]
-                row =  OTTAWA_LON_LAT[0] + ','
+                row  = OTTAWA_LON_LAT[0] + ','
                 row += str(zlon) + ','
                 row += OTTAWA_LON_LAT[1] + ','
                 row += str(zlat) + ','
@@ -269,4 +306,5 @@ if __name__ == "__main__":
     l1.scan_names_spreadsheet(default_inputNames)
     l1.scan_loans_spreadsheet(default_inputLoans)
     l1.make_conn_list(default_loan_conns)
+    l1.write_conn_geojson(default_loan_conns_gj)
     l1.write_location_DB()

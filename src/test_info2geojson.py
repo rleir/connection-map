@@ -24,28 +24,11 @@ def test_open_json():
     init_test_loc_file()
 
     # read the locations json and initialize data structures:
-    #               clear the count to 0
     # but do not scan the spreadsheet
     l1 = info2geojson.LoanInfo(test_locFileName)
-    print("z3 ", l1.loc_db.loc_data)
 
     assert l1.loc_db.loc_data["Gloucester Ontario Canada"]["latitude"] == 45.4473421
 
-    l1.loc_db.loc_data["Gloucester Ontario Canada"]["latitude"] = 99
-    l1.write_location_DB()
-    # output locations DB should still be correct
-    #     and should equal the test check file
-    assert filecmp.cmp(test_locFileName,
-                       test_initlocFileName, shallow=False)
-
-    l1.loc_db.locations_changed = True
-    l1.write_location_DB()
-
-    # output locations DB should be incorrect
-    #     and should not equal the test check file
-    assert not filecmp.cmp(test_locFileName,
-                           test_initlocFileName, shallow=False)
-    l1.loc_db.loc_data["Gloucester Ontario Canada"]["latitude"] = 45.4473421
     l1.write_location_DB()
 
     # output locations DB should be correct
