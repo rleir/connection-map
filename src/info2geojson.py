@@ -4,52 +4,19 @@ Handy utility to get latlong data from an xlsx for use in a d3js map.
   read input names xls data file
   find the address cols
   accumulate country state province
+  save inst names for a popup
   read in locations db
   google to find any unknown latlongs
   read the loans file
   find the key cols from the xls
-for each loan
-find the corresponding address
-
-
-  get the I/O, date
-  find a name
-  get the address and date
-
-    (by date range)
-
-for each connection location
-  save target country position
-  save magnitude I/O
-    (by summing date ranges)
-  save inst names for a popup
-
-for each loan
-  use seq to find name record
+  for each loan
+    use seq to find name record
     increment the loan counter
+  write in new format
 
-for each name
-  if there are loans
-    add to conn list
-    if address exists
-      bump name cont
-    else
-      add new conn with name count of 1
+TBD    (by date range)??
 
-write in new format
-
-data row
-  target latlon
-  magnitude
-  name for popup
 """
-
-# names list gives shorter list of places
-
-
-# places are mostly ends of a connection
-# loans list is just for a count giving line width
-
 
 __author__ = "Richard Leir"
 __copyright__ = "Copyright 2019, Richard Leir"
@@ -226,7 +193,7 @@ class LoanInfo:
             self.name_data[seq]["loans"] += 1
 
     def write_conn_geojson(self, filename):
-        all_data = {}
+        conn_data = {}
 
         for name in self.name_data:
             # names are sparse, so check if this record contains info
@@ -240,7 +207,9 @@ class LoanInfo:
                 continue
 
             coords = self.loc_db.get_address(name_addr)
-            if coords is not None:
+            if coords is None:
+                print("Missing coords: ", name_addr)
+            else:
                 # zlon = coords["longitude"]
                 # zlat = coords["latitude"]
                 # print(coords)
@@ -249,18 +218,20 @@ class LoanInfo:
                 # geo_loc["latitude"]  = coords.latitude
                 # geo_loc["longitude"] = coords.longitude
                 # geo_loc["address"]   = coords.address
-                coords["org names"] = "zzz"
+                coords["org names"] = name["inst"]
                 coords["magnitude"] = name["loans"]
-
-                all_data[name_addr] = coords
-                # zzzzzzzzzzzzzzzz
+                if name_addr not in conn_data.keys():
+                    conn_data[name_addr] = coords
+                else:
+                    conn_data[name_addr]["org names"] += name["inst"]
+                    conn_data[name_addr]["magnitude"] += name["loans"]
 
         with open("tempdbg.json", 'w', encoding='utf8') as json_file:
-            json.dump(all_data, json_file)
+            json.dump(conn_data, json_file)
 
-        write_geojson_file(all_data, filename, and_properties=True)
+        write_geojson_file(conn_data, filename, and_properties=True)
 
-    def make_conn_list(self, filename):
+    def write_conn_csv(self, filename):
         OTTAWA_LON_LAT = ("-75.697", "45.421")
         f = open(filename, 'w')
         f.write('long1,long2,lat1,lat2,placename,loan_count\n')
@@ -305,6 +276,6 @@ if __name__ == "__main__":
 
     l1.scan_names_spreadsheet(default_inputNames)
     l1.scan_loans_spreadsheet(default_inputLoans)
-    l1.make_conn_list(default_loan_conns)
+    l1.write_conn_csv(default_loan_conns)
     l1.write_conn_geojson(default_loan_conns_gj)
     l1.write_location_DB()
