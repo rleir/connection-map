@@ -192,7 +192,7 @@ class LoanInfo:
         else:
             self.name_data[seq]["loans"] += 1
 
-    def write_conn_geojson(self, filename):
+    def make_conn_list(self, filename):
         conn_data = {}
 
         for name in self.name_data:
@@ -277,5 +277,5 @@ if __name__ == "__main__":
     l1.scan_names_spreadsheet(default_inputNames)
     l1.scan_loans_spreadsheet(default_inputLoans)
     l1.write_conn_csv(default_loan_conns)
-    l1.write_conn_geojson(default_loan_conns_gj)
+    l1.make_conn_list(default_loan_conns_gj)
     l1.write_location_DB()

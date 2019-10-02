@@ -13,6 +13,7 @@ test_locFileName = "testData/testLoc.json"
 test_inputNames = "testData/NameTest.xlsx"
 test_inputLoans = "testData/LoansTest.xlsx"
 test_loan_conns = "testData/LoanConnsTest.csv"
+test_conns_json = "testData/LoanConnsTest.json"
 
 
 def init_test_loc_file():
@@ -80,7 +81,18 @@ def test_write_conns():
     l1 = info2geojson.LoanInfo(test_locFileName)
     l1.scan_names_spreadsheet(test_inputNames)
     l1.scan_loans_spreadsheet(test_inputLoans)
-    l1.make_conn_list(test_loan_conns)
+    l1.write_conn_csv(test_loan_conns)
     assert filecmp.cmp(test_loan_conns,
                        "testData/LoanConnsTestRef.csv", shallow=False)
+    return True
+
+
+def test_write_conns_json():
+    init_test_loc_file()
+    l1 = info2geojson.LoanInfo(test_locFileName)
+    l1.scan_names_spreadsheet(test_inputNames)
+    l1.scan_loans_spreadsheet(test_inputLoans)
+    l1.make_conn_list(test_conns_json)
+    assert filecmp.cmp(test_conns_json,
+                       "testData/LoanConnsTestRef.json", shallow=False)
     return True
