@@ -28,7 +28,8 @@ def test_open_json():
     # but do not scan the spreadsheet
     l1 = info2geojson.LoanInfo(test_locFileName)
 
-    assert l1.loc_db.loc_data["Gloucester Ontario Canada"]["latitude"] == 45.4473421
+    assert (l1.loc_db.loc_data["Gloucester Ontario Canada"]["latitude"]
+            == 45.4473421)
 
     l1.write_location_DB()
 

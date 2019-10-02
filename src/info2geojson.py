@@ -200,36 +200,41 @@ class LoanInfo:
             if "addr" not in name.keys():
                 continue
 
-            name_addr = name["addr"]
+            addr = name["addr"]
             # skip loans to Ottawa, they would not display well
             #  (or maybe they would?)
-            if name_addr == "Ottawa Ontario Canada":
+            if addr == "Ottawa Ontario Canada":
                 continue
 
-            coords = self.loc_db.get_address(name_addr)
+            coords = self.loc_db.get_address(addr)
             if coords is None:
-                print("Missing coords: ", name_addr)
+                print("Missing coords: ", addr)
             else:
-                # zlon = coords["longitude"]
-                # zlat = coords["latitude"]
-                # print(coords)
-                # zzzzzzzzzzzzzzzz
-                # geo_loc = {}
-                # geo_loc["latitude"]  = coords.latitude
-                # geo_loc["longitude"] = coords.longitude
-                # geo_loc["address"]   = coords.address
-                coords["org names"] = name["inst"]
-                coords["magnitude"] = name["loans"]
-                if name_addr not in conn_data.keys():
-                    conn_data[name_addr] = coords
-                else:
-                    conn_data[name_addr]["org names"] += name["inst"]
-                    conn_data[name_addr]["magnitude"] += name["loans"]
+                if addr not in conn_data.keys():
+                    coords["magnitude"] = 0
+                    conn_data[addr] = coords
+
+                conn_data[addr]["magnitude"] += name["loans"]
+
+                orgName = name["inst"]
+                if orgName != "":
+                    if "org names" not in conn_data[addr].keys():
+                        conn_data[addr]["org names"] = {orgName: 1}
+                    else:
+                        if orgName in conn_data[addr]["org names"]:
+                            conn_data[addr]["org names"][orgName] += 1
+                        else:
+                            try:
+                                conn_data[addr]["org names"][orgName] = 1
+                            except (Exception,  TypeError) as err:
+                                print("missing orgname entry: {0}".format(err))
+                                print(addr)
 
         with open("tempdbg.json", 'w', encoding='utf8') as json_file:
             json.dump(conn_data, json_file)
-        geojsonfile.write_geojson_file(conn_data, filename, and_properties=True)
-        # zzz write_geojson_file(conn_data, filename, and_properties=True)
+        geojsonfile.write_geojson_file(conn_data,
+                                       filename,
+                                       and_properties=True)
 
     def write_conn_csv(self, filename):
         OTTAWA_LON_LAT = ("-75.697", "45.421")
