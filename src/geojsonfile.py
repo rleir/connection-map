@@ -20,54 +20,60 @@ from typing import Dict, List
 import json
 
 
-def write_geojson_file(all_data, filename, and_properties) -> None:
-    ''' generate feature rec with lat lon position for each address '''
+class geojsonfile:
 
-    fea_data = {}  # type: Dict
-    fea_data["type"] = "FeatureCollection"
-    metadata = {}  # some dummy metadata
-    metadata["generated"] = 1559586926000   # dummy
-    metadata["url"] = "https://zzzz/"       # dummy
-    metadata["title"] = "zzz"               # dummy
-    metadata["status"] = 200                # dummy
-    metadata["api"] = "1.8.1"               # dummy
-    metadata["count"] = len(all_data)
-    fea_data["metadata"] = metadata
+    def write_geojson_file(all_data, filename, and_properties) -> None:
+        ''' generate feature rec with lat lon position for each address '''
 
-    features = []
-    fea_data["features"] = features
+        fea_data = {}  # type: Dict
+        fea_data["type"] = "FeatureCollection"
+        metadata = {}  # some dummy metadata
+        metadata["generated"] = 1559586926000   # dummy
+        metadata["url"] = "https://zzzz/"       # dummy
+        metadata["title"] = "zzz"               # dummy
+        metadata["status"] = 200                # dummy
+        metadata["api"] = "1.8.1"               # dummy
+        metadata["count"] = len(all_data)
+        fea_data["metadata"] = metadata
 
-    for addr in all_data:
-        feature = {}
-        properties = {}
-        geometry = {}
+        features = []
+        fea_data["features"] = features
 
-        if "address" not in all_data[addr]:  # check for key existence
-            continue    # skip this record
-        if "magnitude" not in all_data[addr]:  # check for key existence
-            continue    # skip this record
-        if all_data[addr]["magnitude"] <= 0:  # check for unused location
-            continue    # skip this record
+        for addr in all_data:
+            feature = {}
+            properties = {}
+            geometry = {}
 
-        properties["place"] = all_data[addr]["address"]
-        properties["mag"] = float(all_data[addr]["magnitude"])
+            if "address" not in all_data[addr]:  # check for key existence
+                continue    # skip this record
+            if "magnitude" not in all_data[addr]:  # check for key existence
+                continue    # skip this record
+            if all_data[addr]["magnitude"] <= 0:  # check for unused location
+                continue    # skip this record
 
-        if (and_properties and "org names" in all_data[addr]):
-            properties["popupContent"] = all_data[addr]["org names"]
+            properties["place"] = all_data[addr]["address"]
+            properties["mag"] = float(all_data[addr]["magnitude"])
 
-        coordinates = []
-        coordinates.append(all_data[addr]["longitude"])
+            if (and_properties and "org names" in all_data[addr]):
+                properties["popupContent"] = all_data[addr]["org names"]
 
-        coordinates.append(all_data[addr]["latitude"])
-        coordinates.append(9)
-        geometry["type"] = "Point"
-        geometry["coordinates"] = coordinates
+                coordinates = []
+                coordinates.append(all_data[addr]["longitude"])
 
-        feature["type"] = "Feature"
-        feature["properties"] = properties
-        feature["geometry"] = geometry
-        feature["id"] = "zzz"
-        features.append(feature)
+                coordinates.append(all_data[addr]["latitude"])
+                coordinates.append(9)
+                geometry["type"] = "Point"
+                geometry["coordinates"] = coordinates
 
-    with open(filename, 'w', encoding='utf8') as json_file:
-        json.dump(fea_data, json_file)
+                feature["type"] = "Feature"
+                feature["properties"] = properties
+                feature["geometry"] = geometry
+                feature["id"] = "zzz"
+                features.append(feature)
+
+            with open(filename, 'w', encoding='utf8') as json_file:
+                json.dump(fea_data, json_file)
+
+
+if __name__ == '__main__':
+    pass

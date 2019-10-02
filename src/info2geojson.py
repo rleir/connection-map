@@ -31,7 +31,7 @@ import xlrd
 import math
 import json
 from geolocdb import geolocdb
-from geojsonfile import write_geojson_file
+from geojsonfile import geojsonfile
 
 # input xlsx spreadsheets
 default_inputNames = "names.xlsx"
@@ -228,8 +228,8 @@ class LoanInfo:
 
         with open("tempdbg.json", 'w', encoding='utf8') as json_file:
             json.dump(conn_data, json_file)
-
-        write_geojson_file(conn_data, filename, and_properties=True)
+        geojsonfile.write_geojson_file(conn_data, filename, and_properties=True)
+        # zzz write_geojson_file(conn_data, filename, and_properties=True)
 
     def write_conn_csv(self, filename):
         OTTAWA_LON_LAT = ("-75.697", "45.421")
