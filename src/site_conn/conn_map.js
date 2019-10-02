@@ -26,12 +26,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			    popupContent += "</ul>";
 			}
         }
-		layer.bindPopup(popupContent);
+		layer.bindTooltip(popupContent);
+//		layer.bindPopup(popupContent);
 	}
 
 	L.geoJSON([connData], {
 
 		style: function (feature) {
+            // feature.properties.mag    zzzz
 			return feature.properties && feature.properties.style;
 		},
 
@@ -44,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             
             // an arc from ottawa to latlng
             return L.geodesic([[[45.421, -75.697], latlng]], {
-			    weight: 7,
+			    weight: 2,
 			    opacity: 0.5,
 			    color: 'blue',
 			    steps: 50,
