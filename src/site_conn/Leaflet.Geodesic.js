@@ -128,11 +128,7 @@ L.Geodesic = L.Polyline.extend({
    */
   createCircle: function(center, radius) {
     let polylineIndex = 0;
-    let prev = {
-      lat: 0,
-      lng: 0,
-      brg: 0
-    };
+    let prev;
     let step;
 
     this._latlngs = [];
