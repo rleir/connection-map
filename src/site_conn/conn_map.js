@@ -26,8 +26,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			    popupContent += "</ul>";
 			}
         }
-		layer.bindTooltip(popupContent);
-//		layer.bindPopup(popupContent);
+		layer.bindTooltip(popupContent); // or bindPopup
 	}
 
 	L.geoJSON([connData], {
@@ -43,15 +42,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
             // using Henry Thasler's library
             // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
-            
+
+            //var B = L.marker(Kalaeloa_Airport, {draggable: true}).addTo(map).bindPopup("Drag me.").openPopup();
             // an arc from ottawa to latlng
-            return L.geodesic([[[45.421, -75.697], latlng]], {
+            L.geodesic([[[45.421, -75.697], latlng]], {
 			    weight: 2,
 			    opacity: 0.5,
 			    color: 'blue',
 			    steps: 50,
 			    wrap: false
-		    });
+		    }).addTo(map);
+
+            return L.marker(latlng);
 		}
 	}).addTo(map);
 
