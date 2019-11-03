@@ -44,6 +44,8 @@ default_locFileName = 'locations.json'
 default_loan_conns    = 'loan_conns.csv'
 default_loan_conns_gj = 'loan_conns_geojson.js'
 
+OTTAWA_LON_LAT = (-75.697, 45.421)
+
 
 class LoanInfo:
 
@@ -212,7 +214,7 @@ class LoanInfo:
             else:
                 if addr not in conn_data.keys():
                     coords["magnitude"] = 0
-                    conn_data[addr] = coords
+                    conn_data[addr] = self.adjustLon(coords)
 
                 conn_data[addr]["magnitude"] += name["loans"]
 
@@ -236,8 +238,19 @@ class LoanInfo:
                                        filename,
                                        and_properties=True)
 
+    def adjustLon(self, coords):
+        """ The great circle line generator automatically corrects
+        the Longitude to be (relative to Ottawa) -180 to 180.
+        However the leaflet marker that we place at the destination end
+        of the line knows nothing of this, so we need
+        to correct the longitude to be in this range.
+        """
+        zlon = coords["longitude"]
+        if zlon > OTTAWA_LON_LAT[0] + 180.0:
+            coords["longitude"] = zlon - 360.0
+        return coords
+
     def write_conn_csv(self, filename):
-        OTTAWA_LON_LAT = ("-75.697", "45.421")
         f = open(filename, 'w')
         f.write('long1,long2,lat1,lat2,placename,loan_count\n')
         for name in self.name_data:
@@ -259,9 +272,9 @@ class LoanInfo:
             if coords is not None:
                 zlon = coords["longitude"]
                 zlat = coords["latitude"]
-                row  = OTTAWA_LON_LAT[0] + ','
+                row  = str(OTTAWA_LON_LAT[0]) + ','
                 row += str(zlon) + ','
-                row += OTTAWA_LON_LAT[1] + ','
+                row += str(OTTAWA_LON_LAT[1]) + ','
                 row += str(zlat) + ','
                 row += str(nocomma_addr) + ','
                 row += str(loan_count) + '\n'
