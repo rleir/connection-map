@@ -45,7 +45,6 @@ __status__ = "Production"
 
 import xlrd
 import math
-import json
 from geolocdb import geolocdb
 from geojsonfile import geojsonfile
 
@@ -255,11 +254,10 @@ class LoanInfo:
 
                 conn_data[addr]["org names"][orgName] += name["loans"]
 
-        with open("tempdbg.json", 'w', encoding='utf8') as json_file:
-            json.dump(conn_data, json_file)
         geojsonfile.write_geojson_file(conn_data,
                                        filename,
                                        and_properties=True)
+        return conn_data  # returned for testing only
 
     def adjustLon(self, coords):
         """ The great circle line generator automatically corrects

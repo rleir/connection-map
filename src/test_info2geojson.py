@@ -3,6 +3,7 @@
 import pytest
 import info2geojson
 import filecmp
+import json
 from shutil import copyfile
 
 # init contents
@@ -12,6 +13,7 @@ test_locFileName = "testData/testLoc.json"
 
 test_inputNames = "testData/NameTest.xlsx"
 test_inputLoans = "testData/LoansTest.xlsx"
+test_tempdbg    = "testData/tempdbg.json"
 test_conns_json = "testData/LoanConnsTest.json"
 
 
@@ -74,6 +76,18 @@ def test_few_loans():
     assert l1.name_data[8]["loans"] == 1
 
     return True
+
+
+def test_write_conns_list():
+    init_test_loc_file()
+    l1 = info2geojson.LoanInfo(test_locFileName)
+    l1.scan_names_spreadsheet(test_inputNames)
+    l1.scan_loans_spreadsheet(test_inputLoans)
+    conn_data = l1.make_conn_list(test_conns_json)
+    with open(test_tempdbg, 'w', encoding='utf8') as json_file:
+        json.dump(conn_data, json_file)
+    assert filecmp.cmp(test_tempdbg,
+                       "testData/tempdbgRef.json", shallow=False)
 
 
 def test_write_conns_json():
