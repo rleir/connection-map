@@ -14,13 +14,29 @@ Handy utility to get latlong data from an xlsx for use in a d3js map.
     increment the loan counter
   write in new format
 
+
+Output
+  address is a combination of city,state,country input columns
+    this becomes the key for the location db
+  the Google search returns a lat,lon and an address field which
+    is slightly different from our address.
+    we save it to the DB and use it in the map hover pop-up
+
+  name_data has one record for each valid row in the names input
+  "loans" is a count of loan rows for each name
+
+  "magnitude" or "mag" is the count of "loans" rows
+      for a (city,prov,country) address
+  institute count is increased
+      by the count of input loan rows with the institute name
+
 TBD    (by date range)??
 
 """
 
 __author__ = "Richard Leir"
 __copyright__ = "Copyright 2019, Richard Leir"
-__credits__ = ["Sean Tudor", "Mike Bostock"]
+__credits__ = ["Sean Tudor"]
 __license__ = "GPL"
 __version__ = "1.0.1"
 __maintainer__ = "Richard Leir"
@@ -41,7 +57,6 @@ default_inputLoans = "loans.xlsx"
 default_locFileName = 'locations.json'
 
 # Output loan-connections file
-default_loan_conns    = 'loan_conns.csv'
 default_loan_conns_gj = 'loan_conns_geojson.js'
 
 OTTAWA_LON_LAT = (-75.697, 45.421)
@@ -143,6 +158,10 @@ class LoanInfo:
         return
 
     def scan_loans_spreadsheet(self, xlsx_filename):
+        # read xls
+        # for each loan row
+        #   bump counter in name array
+        #   close xlsx
         wb = xlrd.open_workbook(xlsx_filename)
         s_found = None
         col_ids = None
@@ -195,6 +214,10 @@ class LoanInfo:
             self.name_data[seq]["loans"] += 1
 
     def make_conn_list(self, filename):
+        """
+        for each name
+          write geojson record
+        """
         conn_data = {}
 
         for name in self.name_data:
@@ -215,22 +238,22 @@ class LoanInfo:
                 if addr not in conn_data.keys():
                     coords["magnitude"] = 0
                     conn_data[addr] = self.adjustLon(coords)
+                    conn_data[addr]["org names"] = {}
 
                 conn_data[addr]["magnitude"] += name["loans"]
 
                 orgName = name["inst"]
-                if orgName != "":
-                    if "org names" not in conn_data[addr].keys():
-                        conn_data[addr]["org names"] = {orgName: 1}
-                    else:
-                        if orgName in conn_data[addr]["org names"]:
-                            conn_data[addr]["org names"][orgName] += 1
-                        else:
-                            try:
-                                conn_data[addr]["org names"][orgName] = 1
-                            except (Exception,  TypeError) as err:
-                                print("missing orgname entry: {0}".format(err))
-                                print(addr)
+                if orgName == "":
+                    orgName = "individual(s)"  # a person, not an institution
+
+                if orgName not in conn_data[addr]["org names"]:
+                    try:
+                        conn_data[addr]["org names"][orgName] = 0
+                    except (Exception,  TypeError) as err:
+                        print("missing orgname entry: {0}".format(err))
+                        print(addr)
+
+                conn_data[addr]["org names"][orgName] += name["loans"]
 
         with open("tempdbg.json", 'w', encoding='utf8') as json_file:
             json.dump(conn_data, json_file)
@@ -250,39 +273,6 @@ class LoanInfo:
             coords["longitude"] = zlon - 360.0
         return coords
 
-    def write_conn_csv(self, filename):
-        f = open(filename, 'w')
-        f.write('long1,long2,lat1,lat2,placename,loan_count\n')
-        for name in self.name_data:
-            # names are sparse, so check if this record contains info
-            if "addr" not in name.keys():
-                continue
-
-            loan_count = name["loans"]
-            name_addr = name["addr"]
-            # skip loans to Ottawa, they would not display well
-            #  (or maybe they would?)
-            if name_addr == "Ottawa Ontario Canada":
-                continue
-
-            # remove any commas
-            nocomma_addr = name_addr.replace(',', ' ')
-
-            coords = self.loc_db.get_address(name_addr)
-            if coords is not None:
-                zlon = coords["longitude"]
-                zlat = coords["latitude"]
-                row  = str(OTTAWA_LON_LAT[0]) + ','
-                row += str(zlon) + ','
-                row += str(OTTAWA_LON_LAT[1]) + ','
-                row += str(zlat) + ','
-                row += str(nocomma_addr) + ','
-                row += str(loan_count) + '\n'
-                f.write(row)
-            else:
-                print("location missing for " + name_addr)
-        f.close()
-
     def write_location_DB(self):
         self.loc_db.write_location_DB()
 
@@ -294,6 +284,5 @@ if __name__ == "__main__":
 
     l1.scan_names_spreadsheet(default_inputNames)
     l1.scan_loans_spreadsheet(default_inputLoans)
-    l1.write_conn_csv(default_loan_conns)
     l1.make_conn_list(default_loan_conns_gj)
     l1.write_location_DB()
