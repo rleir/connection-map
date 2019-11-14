@@ -71,8 +71,8 @@ class geojsonfile:
                 feature["id"] = "zzz"
                 features.append(feature)
 
-            with open(filename, 'w', encoding='utf8') as json_file:
-                json.dump(fea_data, json_file)
+        with open(filename, 'w', encoding='utf8') as json_file:
+            json.dump(fea_data, json_file)
 
 
 if __name__ == '__main__':
