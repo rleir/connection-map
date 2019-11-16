@@ -59,11 +59,12 @@ default_locFileName = 'locations.json'
 default_loan_conns_gj = 'loan_conns_geojson.js'
 
 OTTAWA_LON_LAT = (-75.697, 45.421)
-
+DEBUG = False
 
 class LoanInfo:
 
     # names_data list is indexed by seq, and it has gaps (missing entries)
+    # it also has many duplicated rows
     name_data = []  # type: List
 
     def __init__(self,
@@ -140,6 +141,7 @@ class LoanInfo:
         name_rec["addr"] = addr
         name_rec["inst"] = sheet.cell_value(rowx, instCol)
         name_rec["loans"] = 0
+
         colx = col_ids["seqKeyCol"]
 
         cty = sheet.cell_type(rowx, colx)
@@ -147,6 +149,7 @@ class LoanInfo:
         if not cty == xlrd.XL_CELL_NUMBER:
             print("Error: cell type " + str(cty))
         seqKey = math.floor(sheet.cell_value(rowx, colx))
+        name_rec["seq"] = seqKey
 
         if seqKey < len(self.name_data):
             print("Error seqkey " + str(seqKey))
@@ -198,6 +201,8 @@ class LoanInfo:
         except TypeError:
             print("Error: typeerr row col ", str(rowx), str(colx), str(cval))
             return
+
+        self.name_data[seq]["seq"] = seq
         # a seq key of 0 indicates there is no name record
         if seq == 0:
             return
@@ -222,6 +227,12 @@ class LoanInfo:
         for name in self.name_data:
             # names are sparse, so check if this record contains info
             if "addr" not in name.keys():
+                continue
+
+            # names need not have any associated loans, so ignore
+            if name["loans"] <= 0:
+                if DEBUG:
+                    print("no loans for name ", name)
                 continue
 
             addr = name["addr"]

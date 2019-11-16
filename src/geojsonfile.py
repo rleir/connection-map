@@ -44,26 +44,34 @@ class geojsonfile:
             properties = {}
             geometry = {}
 
+            # if "address" not in addr:  # check for key existence
             if "address" not in all_data[addr]:  # check for key existence
+                print("key existence check ", addr)
                 continue    # skip this record
             if "magnitude" not in all_data[addr]:  # check for key existence
+                print("mag existence check ", addr)
                 continue    # skip this record
             if all_data[addr]["magnitude"] <= 0:  # check for unused location
+                print("mag zero check ", addr)
                 continue    # skip this record
 
             properties["place"] = all_data[addr]["address"]
             properties["mag"] = float(all_data[addr]["magnitude"])
 
             if (and_properties and "org names" in all_data[addr]):
-                properties["popupContent"] = all_data[addr]["org names"]
-
                 coordinates = []
                 coordinates.append(all_data[addr]["longitude"])
-
                 coordinates.append(all_data[addr]["latitude"])
                 coordinates.append(9)
                 geometry["type"] = "Point"
                 geometry["coordinates"] = coordinates
+                properties["popupContent"] = {}
+                for org in all_data[addr]["org names"]:
+                    if org == 0:
+                        print("org zero check ", addr)
+                        continue    # skip this record
+                    else:
+                        properties["popupContent"][org] = all_data[addr]["org names"][org]
 
                 feature["type"] = "Feature"
                 feature["properties"] = properties
