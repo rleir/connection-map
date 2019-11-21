@@ -54,13 +54,15 @@ You need an API key from Google for use in searches. Store the key in the GOOGLE
 
 We should be able to add rows to the xlsx and do another run to get the additional locations.
 
+Test it:
+
+$ cd src
+$ flake8
+$ pytest
+
 Run it:
 
 $ python3 info2geojson.py
-
-Test it:
-
-$ pytest
 
 Steps:
 

@@ -50,7 +50,7 @@ from geojsonfile import geojsonfile
 
 # input xlsx spreadsheets
 default_inputNames = "names.xlsx"
-default_inputLoans = "loans.xlsx"
+default_inputIOLoans = "loans.xlsx"     # Outgoing loans
 
 # Input and Output locations file
 default_locFileName = 'locations.json'
@@ -61,8 +61,8 @@ default_loan_conns_gj = 'loan_conns_geojson.js'
 OTTAWA_LON_LAT = (-75.697, 45.421)
 DEBUG = False
 
-class LoanInfo:
 
+class LoanInfo:
     # names_data list is indexed by seq, and it has gaps (missing entries)
     # it also has many duplicated rows
     name_data = []  # type: List
@@ -140,7 +140,8 @@ class LoanInfo:
         name_rec = {}
         name_rec["addr"] = addr
         name_rec["inst"] = sheet.cell_value(rowx, instCol)
-        name_rec["loans"] = 0
+        name_rec["loansI"] = 0
+        name_rec["loansO"] = 0
 
         colx = col_ids["seqKeyCol"]
 
@@ -165,6 +166,8 @@ class LoanInfo:
         #   bump counter in name array
         #   close xlsx
         wb = xlrd.open_workbook(xlsx_filename)
+        datemode = wb.datemode
+
         s_found = None
         col_ids = None
         for sheet in wb.sheets():
@@ -173,25 +176,69 @@ class LoanInfo:
                 s_found = 1
                 for row in range(sheet.nrows):
                     if row == 0:
-                        col_ids = self.get_key_columns(sheet, row)
+                        col_ids = self.get_loans_columns(sheet, row)
                     else:
-                        self.save_key_data(sheet, row, col_ids)
+                        self.save_loans_data(sheet, row, col_ids, datemode)
         if s_found is None:
             print("'LOAN' sheet not found in " + xlsx_filename)
         wb.release_resources()
         del wb
 
-    def get_key_columns(self, sheet, rowx):
+    def get_loans_columns(self, sheet, rowx):
         col_ids = {}
         for colx in range(sheet.ncols):
             hdr = sheet.cell_value(rowx, colx)
             if "SeqFromName" == hdr:
                 col_ids["seqFromCol"] = colx
+            elif "IO" == hdr:
+                col_ids["input-output"] = colx
             elif "DATE" == hdr:
                 col_ids["date"] = colx
+            elif "Date" == hdr:
+                col_ids["date"] = colx
+            elif "Date recorded" == hdr:
+                col_ids["dateRec"] = colx
+            elif "DATERETURN" == hdr:
+                col_ids["dateRet"] = colx
         return col_ids
 
-    def save_key_data(self, sheet, rowx, col_ids):
+    def get_date_data(self, sheet, rowx, colx, datemode):
+        year = ""
+        cval = sheet.cell_value(rowx, colx)
+        if cval != "":
+            try:
+                year = xlrd.xldate_as_tuple(cval, datemode)[0]
+                # print( datetime(*xlrd.xldate_as_tuple(cval, datemode)))
+            except xlrd.xldate.XLDateNegative:
+                print("Warn: row col year ", str(rowx), str(colx),
+                      str(cval), year)
+        # this is strange, but we end up with the correct year value
+        if rowx == 3930:
+            print("row 3930 should be=2005 year ", year, " cval ", cval)
+        if rowx == 3778:
+            print("row 3778 should be=2004 year ", year, " cval ", cval)
+        return year
+
+    def save_loans_data(self, sheet, rowx, col_ids, datemode):
+        # get the year from the date or date recorded or date returned column
+        year = ""
+        colx = col_ids["date"]
+        year = self.get_date_data(sheet, rowx, colx, datemode)
+        if year == "":
+            colx = col_ids["date"]
+            year = self.get_date_data(sheet, rowx, colx, datemode)
+        if year == "":
+            colx = col_ids["dateRec"]
+            year = self.get_date_data(sheet, rowx, colx, datemode)
+        if year == "":
+            colx = col_ids["dateRet"]
+            year = self.get_date_data(sheet, rowx, colx, datemode)
+        if year == "":
+            print("no date====== ", rowx)
+
+        colx = col_ids["input-output"]
+        i_o = sheet.cell_value(rowx, colx)
+
         colx = col_ids["seqFromCol"]
         cval = sheet.cell_value(rowx, colx)
         if cval == "":
@@ -202,20 +249,35 @@ class LoanInfo:
             print("Error: typeerr row col ", str(rowx), str(colx), str(cval))
             return
 
+        # self.name_data[seq]["year"] = year
+        # self.name_data[seq]["i_o"]  = i_o
+
         self.name_data[seq]["seq"] = seq
         # a seq key of 0 indicates there is no name record
         if seq == 0:
             return
+
+        loans_key = "loans" + i_o
         # check length
-        # check for "loans"
+        # check for "loansI" or "loansO"
         if seq > len(self.name_data) - 1:
             print("Error: seq in loans, max seq in names ",
                   str(seq), len(self.name_data))
-        elif "loans" not in self.name_data[seq].keys():
-            print("Error: loans key missing " + str(seq))
+        elif loans_key not in self.name_data[seq].keys():
+            print("Error: ", loans_key, " key missing " + str(seq))
 
         else:
-            self.name_data[seq]["loans"] += 1
+            self.name_data[seq][loans_key] += 1
+
+    def check_and_add(self, orgNameIO, quantity, conn_data, addr):
+        if quantity > 0:
+            if orgNameIO not in conn_data[addr]["org names"]:
+                try:
+                    conn_data[addr]["org names"][orgNameIO] = 0
+                except (Exception,  TypeError) as err:
+                    print("missing orgnameI entry: {0}".format(err))
+                    print(addr)
+            conn_data[addr]["org names"][orgNameIO] += quantity
 
     def make_conn_list(self, filename):
         """
@@ -230,7 +292,7 @@ class LoanInfo:
                 continue
 
             # names need not have any associated loans, so ignore
-            if name["loans"] <= 0:
+            if name["loansI"] <= 0 and name["loansO"] <= 0:
                 if DEBUG:
                     print("no loans for name ", name)
                 continue
@@ -250,20 +312,17 @@ class LoanInfo:
                     conn_data[addr] = self.adjustLon(coords)
                     conn_data[addr]["org names"] = {}
 
-                conn_data[addr]["magnitude"] += name["loans"]
+                conn_data[addr]["magnitude"] += name["loansI"]
+                conn_data[addr]["magnitude"] += name["loansO"]
 
                 orgName = name["inst"]
                 if orgName == "":
                     orgName = "individual(s)"  # a person, not an institution
 
-                if orgName not in conn_data[addr]["org names"]:
-                    try:
-                        conn_data[addr]["org names"][orgName] = 0
-                    except (Exception,  TypeError) as err:
-                        print("missing orgname entry: {0}".format(err))
-                        print(addr)
-
-                conn_data[addr]["org names"][orgName] += name["loans"]
+                self.check_and_add(orgName + "I", name["loansI"],
+                                   conn_data, addr)
+                self.check_and_add(orgName + "O", name["loansO"],
+                                   conn_data, addr)
 
         geojsonfile.write_geojson_file(conn_data,
                                        filename,
@@ -292,6 +351,6 @@ if __name__ == "__main__":
     l1 = LoanInfo(default_locFileName)
 
     l1.scan_names_spreadsheet(default_inputNames)
-    l1.scan_loans_spreadsheet(default_inputLoans)
+    l1.scan_loans_spreadsheet(default_inputIOLoans)
     l1.make_conn_list(default_loan_conns_gj)
     l1.write_location_DB()

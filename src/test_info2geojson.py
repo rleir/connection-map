@@ -69,11 +69,11 @@ def test_few_loans():
     l1.scan_names_spreadsheet(test_inputNames)
     l1.scan_loans_spreadsheet(test_inputLoans)
 
-    assert "loans" not in l1.name_data[1].keys()
-    assert l1.name_data[2]["loans"] == 2
-    assert "loans" not in l1.name_data[3].keys()
-    assert l1.name_data[7]["loans"] == 3
-    assert l1.name_data[8]["loans"] == 1
+    assert "loansO" not in l1.name_data[1].keys()
+    assert l1.name_data[2]["loansO"] == 2
+    assert "loansO" not in l1.name_data[3].keys()
+    assert l1.name_data[7]["loansO"] == 3
+    assert l1.name_data[8]["loansO"] == 1
 
     return True
 
