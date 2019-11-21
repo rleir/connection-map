@@ -41,7 +41,7 @@ class geojsonfile:
 
         for addr in all_data:
             feature = {}
-            properties = {}
+            props = {}
             geometry = {}
 
             # if "address" not in addr:  # check for key existence
@@ -55,29 +55,31 @@ class geojsonfile:
                 print("mag zero check ", addr)
                 continue    # skip this record
 
-            properties["place"] = all_data[addr]["address"]
-            properties["mag"] = float(all_data[addr]["magnitude"])
+            props["place"] = all_data[addr]["address"]
+            props["mag"] = float(all_data[addr]["magnitude"])
 
-            if (and_properties and "org names" in all_data[addr]):
-                coordinates = []
-                coordinates.append(all_data[addr]["longitude"])
-                coordinates.append(all_data[addr]["latitude"])
-                coordinates.append(9)
-                geometry["type"] = "Point"
-                geometry["coordinates"] = coordinates
-                properties["popupContent"] = {}
-                for org in all_data[addr]["org names"]:
-                    if org == 0:
-                        print("org zero check ", addr)
-                        continue    # skip this record
-                    else:
-                        properties["popupContent"][org] = all_data[addr]["org names"][org]
+            coordinates = []
+            coordinates.append(all_data[addr]["longitude"])
+            coordinates.append(all_data[addr]["latitude"])
+            coordinates.append(9)
+            geometry["type"] = "Point"
+            geometry["coordinates"] = coordinates
+            feature["type"] = "Feature"
+            feature["properties"] = props
+            feature["geometry"] = geometry
+            feature["id"] = "zzz"
+            features.append(feature)
 
-                feature["type"] = "Feature"
-                feature["properties"] = properties
-                feature["geometry"] = geometry
-                feature["id"] = "zzz"
-                features.append(feature)
+            if not and_properties:
+                continue
+            if "org names" not in all_data[addr]:
+                continue
+            props["popupContent"] = {}
+            for org in all_data[addr]["org names"]:
+                if org == 0:
+                    print("org zero check ", addr)
+                    continue    # skip this record
+                props["popupContent"][org] = all_data[addr]["org names"][org]
 
         with open(filename, 'w', encoding='utf8') as json_file:
             json.dump(fea_data, json_file)
