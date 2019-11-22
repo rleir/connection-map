@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
             // zzz insti names in data
             if( feature.properties.popupContent) {
                 for(var key in feature.properties.popupContent) {
-                    loansdir = key.substr(0,1);
-                    instname = key.substr(1);
+                    var loansdir = key.substr(0,1);
+                    var instname = key.substr(1);
                     if( loansdir == 'O'){
                         outloanInsts.push(instname);
                         outloanNum.push(feature.properties.popupContent[key]);
