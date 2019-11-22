@@ -319,9 +319,9 @@ class LoanInfo:
                 if orgName == "":
                     orgName = "individual(s)"  # a person, not an institution
 
-                self.check_and_add(orgName + "I", name["loansI"],
+                self.check_and_add("I" + orgName, name["loansI"],
                                    conn_data, addr)
-                self.check_and_add(orgName + "O", name["loansO"],
+                self.check_and_add("O" + orgName, name["loansO"],
                                    conn_data, addr)
 
         geojsonfile.write_geojson_file(conn_data,
