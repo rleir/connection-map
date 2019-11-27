@@ -56,6 +56,7 @@ class geojsonfile:
                 continue    # skip this record
 
             props["place"] = all_data[addr]["address"]
+            props["year"] = all_data[addr]["year"]
             props["mag"] = float(all_data[addr]["magnitude"])
 
             coordinates = []
