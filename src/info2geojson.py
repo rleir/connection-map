@@ -249,7 +249,7 @@ class LoanInfo:
             print("Error: typeerr row col ", str(rowx), str(colx), str(cval))
             return
 
-        # self.name_data[seq]["year"] = year
+        self.name_data[seq]["year"] = year
         # self.name_data[seq]["i_o"]  = i_o
 
         self.name_data[seq]["seq"] = seq
@@ -307,22 +307,25 @@ class LoanInfo:
             if coords is None:
                 print("Missing coords: ", addr)
             else:
-                if addr not in conn_data.keys():
+                year = name["year"]
+                conn_key = addr + str(year)
+                if conn_key not in conn_data.keys():
                     coords["magnitude"] = 0
-                    conn_data[addr] = self.adjustLon(coords)
-                    conn_data[addr]["org names"] = {}
+                    conn_data[conn_key] = self.adjustLon(coords)
+                    conn_data[conn_key]["year"] = year  # zzz debug
+                    conn_data[conn_key]["org names"] = {}
 
-                conn_data[addr]["magnitude"] += name["loansI"]
-                conn_data[addr]["magnitude"] += name["loansO"]
+                conn_data[conn_key]["magnitude"] += name["loansI"]
+                conn_data[conn_key]["magnitude"] += name["loansO"]
 
                 orgName = name["inst"]
                 if orgName == "":
                     orgName = "individual(s)"  # a person, not an institution
 
                 self.check_and_add("I" + orgName, name["loansI"],
-                                   conn_data, addr)
+                                   conn_data, conn_key)
                 self.check_and_add("O" + orgName, name["loansO"],
-                                   conn_data, addr)
+                                   conn_data, conn_key)
 
         geojsonfile.write_geojson_file(conn_data,
                                        filename,
