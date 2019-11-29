@@ -136,9 +136,68 @@ document.addEventListener("DOMContentLoaded", function(event) {
         layer.bindTooltip(popupContent); // or bindPopup
     }
 
+    // get the input features in a decade,
+    //   and create a feature per address which aggregates input features
+    //   for all years in the decade
+    function build_decade_range (pane_index){
+        let decade_features = {}
+        let decade_start = pane_index * 10 + MIN_DECADE;
+        let decade_end = decade_start + 10;
+        // scan the input features, looking for ones which are within the decade
+        //  TODO: scan once, not many times
+        connData.features.forEach( function(feature, index, array) {
+            let year = feature.properties.year;
+            if(year >= decade_start &&
+               year < decade_end ){
+                let addr = feature.properties.place;
+                // is this in  decade_features? create or deep merge
+                if(!(addr in Object.keys(decade_features))) {
+                    decade_features[addr] = {"type": "Feature"};
+                    decade_features[addr]["properties"] = feature.properties;
+                    decade_features[addr]["properties"]["years"] = [feature.properties.year];
+                    decade_features[addr]["geometry"] = feature.geometry;
+                } else {
+                    let props = decade_features[addr]["properties"];
+                    props.years.push(feature.properties.year);
+
+                    for( inst in Object.keys( props.popupcontent)){
+                        // is this inst in decade_features? create or merge
+                        if( !(inst in Object.keys( feature.properties.popupcontent))){
+                            props.popupcontent[inst] = 0;
+                        }
+                        props.popupcontent[inst] += feature.properties.popupcontent[inst];
+                    }
+                }
+            }
+        });
+
+        let decade_range = {
+            "type": "FeatureCollection",
+            "metadata": {},
+            "features": []
+        };
+        decade_range.metadata = connData.metadata;
+
+        // decade_features.forEach( function(feature, index, array) {
+        for( var dec_feature in decade_features){
+            decade_range.features.push(decade_features[dec_feature]);
+        }
+        return decade_range;
+    }
+
     // disable the shadow
     var icon = new L.Icon.Default();
     icon.options.shadowSize = [0,0];
+
+    // group the input features by address,decade
+    var year_ranges = [];
+    year_ranges.metadata = connData.metadata;
+
+    for( var pane_index = 0; pane_index< n_panes; pane_index++) {
+        let decade_range = build_decade_range (pane_index);
+        // append new pane to the array
+        year_ranges.push( decade_range );
+    }
 
     L.geoJSON([connData], {
 
