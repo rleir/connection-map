@@ -90,6 +90,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
             if( feature.properties.place) {
                 popupContent += feature.properties.place;
                 popupContent += "<br>";
+                popupContent += "years= "
+                feature.properties.years.forEach( function(value, index, array) {
+                    popupContent += value + ", ";
+                });
+                popupContent += "<br>";
             }
             // zzz insti names in data
             if( feature.properties.popupContent) {
@@ -160,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     let props = decade_features[addr]["properties"];
                     props.years.push(feature.properties.year);
 
-                    for( inst in Object.keys( props.popupcontent)){
+                    for( var inst in Object.keys( props.popupcontent)){
                         // is this inst in decade_features? create or merge
                         if( !(inst in Object.keys( feature.properties.popupcontent))){
                             props.popupcontent[inst] = 0;
