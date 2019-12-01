@@ -250,8 +250,6 @@ class LoanInfo:
             return
 
         self.name_data[seq]["year"] = year
-        # self.name_data[seq]["i_o"]  = i_o
-
         self.name_data[seq]["seq"] = seq
         # a seq key of 0 indicates there is no name record
         if seq == 0:
@@ -285,7 +283,7 @@ class LoanInfo:
           write geojson record
         """
         conn_data = {}
-
+        count = 0
         for name in self.name_data:
             # names are sparse, so check if this record contains info
             if "addr" not in name.keys():
@@ -306,26 +304,30 @@ class LoanInfo:
             coords = self.loc_db.get_address(addr)
             if coords is None:
                 print("Missing coords: ", addr)
-            else:
-                year = name["year"]
-                conn_key = addr + str(year)
-                if conn_key not in conn_data.keys():
-                    coords["magnitude"] = 0
-                    conn_data[conn_key] = self.adjustLon(coords)
-                    conn_data[conn_key]["year"] = year  # zzz debug
-                    conn_data[conn_key]["org names"] = {}
+                continue
 
-                conn_data[conn_key]["magnitude"] += name["loansI"]
-                conn_data[conn_key]["magnitude"] += name["loansO"]
+            year = name["year"]
+            conn_key = addr + str(year)
+            if conn_key not in conn_data.keys():
+                coords["magnitude"] = 0
+                conn_data[conn_key] = self.adjustLon(coords)
+                conn_data[conn_key]["year"] = year  # zzz debug
+                conn_data[conn_key]["org names"] = {}
+                if(count<8):
+                    count += 1
+                    print("addryear ", conn_key)
 
-                orgName = name["inst"]
-                if orgName == "":
-                    orgName = "individual(s)"  # a person, not an institution
+            conn_data[conn_key]["magnitude"] += name["loansI"]
+            conn_data[conn_key]["magnitude"] += name["loansO"]
 
-                self.check_and_add("I" + orgName, name["loansI"],
-                                   conn_data, conn_key)
-                self.check_and_add("O" + orgName, name["loansO"],
-                                   conn_data, conn_key)
+            orgName = name["inst"]
+            if orgName == "":
+                orgName = "individual(s)"  # a person, not an institution
+
+            self.check_and_add("I" + orgName, name["loansI"],
+                               conn_data, conn_key)
+            self.check_and_add("O" + orgName, name["loansO"],
+                               conn_data, conn_key)
 
         geojsonfile.write_geojson_file(conn_data,
                                        filename,
