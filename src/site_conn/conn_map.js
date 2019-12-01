@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     // array of n panes -- one per decade from min decade to max decade
     var panes = [];
     let n_panes = (MAX_DECADE - MIN_DECADE)/10 + 1;
-    for( var pane_index = 0; pane_index< n_panes; pane_index++) {
+    for( let pane_index = 0; pane_index< n_panes; pane_index++) {
         // append new pane to the array
         panes.push( map.createPane('pane'+pane_index));
     }
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // decade to index
         var new_p_index = (decade - MIN_DECADE)/10;
         if(new_p_index <0) {
-            console.log("zzz pane_index " + new_p_index);
+            console.log("zzz new_pane_index " + new_p_index);
         }
         // hide all old panes
         panes.forEach( function(value, index, array) {
@@ -91,9 +91,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 popupContent += feature.properties.place;
                 popupContent += "<br>";
                 popupContent += "years= "
-                feature.properties.years.forEach( function(value, index, array) {
-                    popupContent += value + ", ";
-                });
+                if( ! feature.properties.years){
+                    console.log("no years " + feature.properties.place);
+                } else {
+                    feature.properties.years.forEach( function(value, index, array) {
+                        popupContent += value + ", ";
+                    });
+                }
                 popupContent += "<br>";
             }
             // zzz insti names in data
@@ -156,7 +160,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
                year < decade_end ){
                 let addr = feature.properties.place;
                 // is this in  decade_features? create or deep merge
-                if(!(addr in Object.keys(decade_features))) {
+                //if(!(addr in Object.keys(decade_features))) {
+                if(!(addr in decade_features)) {
                     decade_features[addr] = {"type": "Feature"};
                     decade_features[addr]["properties"] = feature.properties;
                     decade_features[addr]["properties"]["years"] = [feature.properties.year];
@@ -165,9 +170,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     let props = decade_features[addr]["properties"];
                     props.years.push(feature.properties.year);
 
-                    for( var inst in Object.keys( props.popupcontent)){
+                    //for( var inst in Object.keys( props.popupcontent)){
+                    for( var inst in props.popupcontent){
                         // is this inst in decade_features? create or merge
-                        if( !(inst in Object.keys( feature.properties.popupcontent))){
+                        if( !(inst in feature.properties.popupcontent)){
                             props.popupcontent[inst] = 0;
                         }
                         props.popupcontent[inst] += feature.properties.popupcontent[inst];
@@ -198,13 +204,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
     var year_ranges = [];
     year_ranges.metadata = connData.metadata;
 
-    for( var pane_index = 0; pane_index< n_panes; pane_index++) {
+    for( let pane_index = 0; pane_index< n_panes; pane_index++) {
         let decade_range = build_decade_range (pane_index);
         // append new pane to the array
         year_ranges.push( decade_range );
-    }
 
-    L.geoJSON([connData], {
+//    L.geoJSON([connData], {
+    L.geoJSON([decade_range], {
 
         style: function (feature) {
             // feature.properties.mag    zzzz
@@ -215,11 +221,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
         pointToLayer: function (feature, latlng) {
             var p_index = Math.floor((feature.properties.year - MIN_DECADE)/10);  // zzz check for float/int problems
-            var pane = panes[p_index];
-
             if(p_index <0) {
-                console.log("zzz pane_index " + p_index);
+                console.log("zzz p_index " + p_index);
             }
+            var pane = panes[p_index];
 
             // using Henry Thasler's library
             // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
@@ -239,6 +244,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             });
         }
     }).addTo(map);
+    }
 
 });
 
