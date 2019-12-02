@@ -225,9 +225,6 @@ class LoanInfo:
         colx = col_ids["date"]
         year = self.get_date_data(sheet, rowx, colx, datemode)
         if year == "":
-            colx = col_ids["date"]
-            year = self.get_date_data(sheet, rowx, colx, datemode)
-        if year == "":
             colx = col_ids["dateRec"]
             year = self.get_date_data(sheet, rowx, colx, datemode)
         if year == "":
@@ -235,6 +232,7 @@ class LoanInfo:
             year = self.get_date_data(sheet, rowx, colx, datemode)
         if year == "":
             print("no date====== ", rowx)
+            year = "1900"
 
         colx = col_ids["input-output"]
         i_o = sheet.cell_value(rowx, colx)
