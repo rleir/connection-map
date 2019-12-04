@@ -285,12 +285,10 @@ class LoanInfo:
         self.conn_data[conn_key]["magnitude"] += 1
 
         orgName = self.name_data[seq]["inst"]
-        print("orgname ", orgName)
         if orgName == "":
             orgName = "individual(s)"  # a person, not an institution
 
         orgNameIO = i_o + orgName
-        print("orgname ", orgNameIO)
         if orgNameIO not in self.conn_data[conn_key]["org names"]:
             try:
                 self.conn_data[conn_key]["org names"][orgNameIO] = 0
