@@ -69,33 +69,31 @@ def test_few_loans():
     l1.scan_names_spreadsheet(test_inputNames)
     l1.scan_loans_spreadsheet(test_inputLoans)
 
-    assert "loansO" not in l1.name_data[1].keys()
-    assert l1.name_data[2]["loansO"] == 2
-    assert "loansO" not in l1.name_data[3].keys()
-    assert l1.name_data[7]["loansO"] == 3
-    assert l1.name_data[8]["loansO"] == 1
+    assert l1.conn_data['Gloucester Ontario Canada1992']["year"] == 1992
+    assert l1.conn_data['Cornwall Ontario Canada1992']["year"] == 1992
+    assert l1.conn_data['Cornwall Ontario Canada1993']["year"] == 1993
+    assert l1.conn_data['Cornwall Ontario Canada1992']["magnitude"] == 3
+    assert l1.conn_data['Cornwall Ontario Canada1993']["magnitude"] == 1
 
-    return True
+    assert l1.conn_data['Gloucester Ontario Canada1992']["magnitude"] == 1
+    assert l1.conn_data['Gloucester Ontario Canada1993']["magnitude"] == 2
 
-
-def test_write_conns_list():
-    init_test_loc_file()
-    l1 = info2geojson.LoanInfo(test_locFileName)
-    l1.scan_names_spreadsheet(test_inputNames)
-    l1.scan_loans_spreadsheet(test_inputLoans)
-    conn_data = l1.make_conn_list(test_conns_json)
+    l1.make_conn_list(test_conns_json)
+    assert l1.conn_data['Cornwall Ontario Canada1992']["magnitude"] == 3
     with open(test_tempdbg, 'w', encoding='utf8') as json_file:
-        json.dump(conn_data, json_file)
+        json.dump(l1.conn_data, json_file)
     assert filecmp.cmp(test_tempdbg,
                        "testData/tempdbgRef.json", shallow=False)
 
-
-def test_write_conns_json():
-    init_test_loc_file()
-    l1 = info2geojson.LoanInfo(test_locFileName)
-    l1.scan_names_spreadsheet(test_inputNames)
-    l1.scan_loans_spreadsheet(test_inputLoans)
-    l1.make_conn_list(test_conns_json)
     assert filecmp.cmp(test_conns_json,
                        "testData/LoanConnsTestRef.json", shallow=False)
     return True
+
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    test_open_json()
+    test_few_names()
+    test_few_loans()
+    test_write_conns_list()
+    test_write_conns_json()

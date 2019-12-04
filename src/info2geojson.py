@@ -47,6 +47,7 @@ import xlrd
 import math
 from geolocdb import geolocdb
 from geojsonfile import geojsonfile
+import copy
 
 # input xlsx spreadsheets
 default_inputNames = "names.xlsx"
@@ -66,6 +67,7 @@ class LoanInfo:
     # names_data list is indexed by seq, and it has gaps (missing entries)
     # it also has many duplicated rows
     name_data = []  # type: List
+    conn_data = {}
 
     def __init__(self,
                  locFileName):
@@ -140,8 +142,6 @@ class LoanInfo:
         name_rec = {}
         name_rec["addr"] = addr
         name_rec["inst"] = sheet.cell_value(rowx, instCol)
-        name_rec["loansI"] = 0
-        name_rec["loansO"] = 0
 
         colx = col_ids["seqKeyCol"]
 
@@ -208,7 +208,6 @@ class LoanInfo:
         if cval != "":
             try:
                 year = xlrd.xldate_as_tuple(cval, datemode)[0]
-                # print( datetime(*xlrd.xldate_as_tuple(cval, datemode)))
             except xlrd.xldate.XLDateNegative:
                 print("Warn: row col year ", str(rowx), str(colx),
                       str(cval), year)
@@ -221,18 +220,18 @@ class LoanInfo:
 
     def save_loans_data(self, sheet, rowx, col_ids, datemode):
         # get the year from the date or date recorded or date returned column
-        year = ""
+        year = 0
         colx = col_ids["date"]
         year = self.get_date_data(sheet, rowx, colx, datemode)
-        if year == "":
+
+        if year == 0:
             colx = col_ids["dateRec"]
             year = self.get_date_data(sheet, rowx, colx, datemode)
-        if year == "":
+        if year == 0:
             colx = col_ids["dateRet"]
             year = self.get_date_data(sheet, rowx, colx, datemode)
-        if year == "":
+        if year == 0:
             print("no date====== ", rowx)
-            year = "1900"
 
         colx = col_ids["input-output"]
         i_o = sheet.cell_value(rowx, colx)
@@ -247,90 +246,67 @@ class LoanInfo:
             print("Error: typeerr row col ", str(rowx), str(colx), str(cval))
             return
 
-        self.name_data[seq]["year"] = year
-        self.name_data[seq]["seq"] = seq
         # a seq key of 0 indicates there is no name record
         if seq == 0:
             return
-
-        loans_key = "loans" + i_o
         # check length
-        # check for "loansI" or "loansO"
         if seq > len(self.name_data) - 1:
             print("Error: seq in loans, max seq in names ",
                   str(seq), len(self.name_data))
-        elif loans_key not in self.name_data[seq].keys():
-            print("Error: ", loans_key, " key missing " + str(seq))
+            return
+        self.build_conn_list(seq, year, i_o)
 
-        else:
-            self.name_data[seq][loans_key] += 1
+    def build_conn_list(self, seq, year, i_o):
+        # add a record to  the connection list
 
-    def check_and_add(self, orgNameIO, quantity, conn_data, addr):
-        if quantity > 0:
-            if orgNameIO not in conn_data[addr]["org names"]:
-                try:
-                    conn_data[addr]["org names"][orgNameIO] = 0
-                except (Exception,  TypeError) as err:
-                    print("missing orgnameI entry: {0}".format(err))
-                    print(addr)
-            conn_data[addr]["org names"][orgNameIO] += quantity
+        if "addr" not in self.name_data[seq].keys():
+            print("missing name rec, seq ", seq)
+            return
+
+        addr = self.name_data[seq]["addr"]
+        # skip loans to Ottawa, they would not display well
+        #  (or maybe they would?)
+        if addr == "Ottawa Ontario Canada":
+            return
+        coords = self.loc_db.get_address(addr)
+        if coords is None:
+            print("Missing coords: ", addr)
+            return
+
+        conn_key = addr + str(year)
+
+        if self.conn_data.get(conn_key) is None:
+            newrec = self.adjustLon(coords)
+            newrec["year"] = copy.copy(year)
+            newrec["magnitude"] = 0
+            newrec["org names"] = {}
+            self.conn_data[conn_key] = copy.copy(newrec)
+
+        self.conn_data[conn_key]["magnitude"] += 1
+
+        orgName = self.name_data[seq]["inst"]
+        print("orgname ", orgName)
+        if orgName == "":
+            orgName = "individual(s)"  # a person, not an institution
+
+        orgNameIO = i_o + orgName
+        print("orgname ", orgNameIO)
+        if orgNameIO not in self.conn_data[conn_key]["org names"]:
+            try:
+                self.conn_data[conn_key]["org names"][orgNameIO] = 0
+            except (Exception,  TypeError) as err:
+                print("missing orgnameI entry: {0}".format(err))
+                print(conn_key)
+        self.conn_data[conn_key]["org names"][orgNameIO] += 1
 
     def make_conn_list(self, filename):
         """
         for each name
           write geojson record
         """
-        conn_data = {}
-        count = 0
-        for name in self.name_data:
-            # names are sparse, so check if this record contains info
-            if "addr" not in name.keys():
-                continue
-
-            # names need not have any associated loans, so ignore
-            if name["loansI"] <= 0 and name["loansO"] <= 0:
-                if DEBUG:
-                    print("no loans for name ", name)
-                continue
-
-            addr = name["addr"]
-            # skip loans to Ottawa, they would not display well
-            #  (or maybe they would?)
-            if addr == "Ottawa Ontario Canada":
-                continue
-
-            coords = self.loc_db.get_address(addr)
-            if coords is None:
-                print("Missing coords: ", addr)
-                continue
-
-            year = name["year"]
-            conn_key = addr + str(year)
-            if conn_key not in conn_data.keys():
-                coords["magnitude"] = 0
-                conn_data[conn_key] = self.adjustLon(coords)
-                conn_data[conn_key]["year"] = year  # zzz debug
-                conn_data[conn_key]["org names"] = {}
-                if(count<8):
-                    count += 1
-                    print("addryear ", conn_key)
-
-            conn_data[conn_key]["magnitude"] += name["loansI"]
-            conn_data[conn_key]["magnitude"] += name["loansO"]
-
-            orgName = name["inst"]
-            if orgName == "":
-                orgName = "individual(s)"  # a person, not an institution
-
-            self.check_and_add("I" + orgName, name["loansI"],
-                               conn_data, conn_key)
-            self.check_and_add("O" + orgName, name["loansO"],
-                               conn_data, conn_key)
-
-        geojsonfile.write_geojson_file(conn_data,
+        geojsonfile.write_geojson_file(self.conn_data,
                                        filename,
                                        and_properties=True)
-        return conn_data  # returned for testing only
 
     def adjustLon(self, coords):
         """ The great circle line generator automatically corrects
