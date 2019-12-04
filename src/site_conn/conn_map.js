@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 
     formButton.onclick = function() {
-        //      zzz  let decade_str = formSelect.node().value;
         let decade_str = formSelect.options[ formSelect.selectedIndex].text;
         let decade = Number(decade_str)
 
@@ -68,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // decade to index
         var new_p_index = (decade - MIN_DECADE)/10;
         if(new_p_index <0) {
-            console.log("zzz new_pane_index " + new_p_index);
+            console.log("error new_pane_index " + new_p_index);
         }
         // hide all old panes
         panes.forEach( function(value, index, array) {
@@ -100,7 +99,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 }
                 popupContent += "<br>";
             }
-            // zzz insti names in data
             if( feature.properties.popupContent) {
                 for(var key in feature.properties.popupContent) {
                     var loansdir = key.substr(0,1);
@@ -209,41 +207,39 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // append new pane to the array
         year_ranges.push( decade_range );
 
-//    L.geoJSON([connData], {
-    L.geoJSON([decade_range], {
+        L.geoJSON([decade_range], {
 
-        style: function (feature) {
-            // feature.properties.mag    zzzz
-            return feature.properties && feature.properties.style;
-        },
+            style: function (feature) {
+                return feature.properties && feature.properties.style;
+            },
 
-        onEachFeature: onEachFeature,
+            onEachFeature: onEachFeature,
 
-        pointToLayer: function (feature, latlng) {
-            var p_index = Math.floor((feature.properties.year - MIN_DECADE)/10);  // zzz check for float/int problems
-            if(p_index <0) {
-                console.log("zzz p_index " + p_index);
+            pointToLayer: function (feature, latlng) {
+                var p_index = Math.floor((feature.properties.year - MIN_DECADE)/10);  // zzz check for float/int problems
+                if(p_index <0) {
+                    console.log("error p_index " + p_index);
+                }
+                var pane = panes[p_index];
+
+                // using Henry Thasler's library
+                // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
+                // an arc from ottawa to latlng
+                L.geodesic([[[45.421, -75.697], latlng]], {
+                    weight: 2,
+                    opacity: 0.5,
+                    color: 'blue',
+                    steps: 50,
+                    pane: pane,
+                    wrap: false
+                }).addTo(map);
+
+                return L.marker(latlng, {
+                    icon: icon,
+                    pane
+                });
             }
-            var pane = panes[p_index];
-
-            // using Henry Thasler's library
-            // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
-            // an arc from ottawa to latlng
-            L.geodesic([[[45.421, -75.697], latlng]], {
-                weight: 2,
-                opacity: 0.5,
-                color: 'blue',
-                steps: 50,
-                pane: pane,
-                wrap: false
-            }).addTo(map);
-
-            return L.marker(latlng, {
-                icon: icon,
-                pane
-            });
-        }
-    }).addTo(map);
+        }).addTo(map);
     }
 
 });
