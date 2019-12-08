@@ -54,8 +54,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
         var decade = this.value;
         revealData(decade);
     }
-    // the initial load
-    revealData(formSelect.options[ formSelect.selectedIndex].text);
 
     function hide(index) {
         panes[index].style.display = 'none';
@@ -161,20 +159,21 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 //if(!(addr in Object.keys(decade_features))) {
                 if(!(addr in decade_features)) {
                     decade_features[addr] = {"type": "Feature"};
-                    decade_features[addr]["properties"] = feature.properties;
-                    decade_features[addr]["properties"]["years"] = [feature.properties.year];
+                    decade_features[addr]["properties"] = Object.assign(feature.properties);
+                    decade_features[addr].properties.popupContent = Object.assign(feature.properties.popupContent);
+                    decade_features[addr].properties["years"] = [feature.properties.year];
                     decade_features[addr]["geometry"] = feature.geometry;
                 } else {
                     let props = decade_features[addr]["properties"];
                     props.years.push(feature.properties.year);
 
-                    //for( var inst in Object.keys( props.popupcontent)){
-                    for( var inst in props.popupcontent){
+                    //for( var inst in Object.keys( props.popupContent)){
+                    for( var inst in props.popupContent){
                         // is this inst in decade_features? create or merge
-                        if( !(inst in feature.properties.popupcontent)){
-                            props.popupcontent[inst] = 0;
+                        if( !(inst in feature.properties.popupContent)){
+                            props.popupContent[inst] = 0;
                         }
-                        props.popupcontent[inst] += feature.properties.popupcontent[inst];
+                        props.popupContent[inst] += feature.properties.popupContent[inst];
                     }
                 }
             }
@@ -242,5 +241,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }).addTo(map);
     }
 
+    // the initial load
+    revealData(formSelect.options[ formSelect.selectedIndex].text);
 });
 
