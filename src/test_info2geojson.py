@@ -95,5 +95,3 @@ if __name__ == "__main__":
     test_open_json()
     test_few_names()
     test_few_loans()
-    test_write_conns_list()
-    test_write_conns_json()

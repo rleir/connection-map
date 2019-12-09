@@ -192,12 +192,16 @@ class LoanInfo:
                 col_ids["seqFromCol"] = colx
             elif "IO" == hdr:
                 col_ids["input-output"] = colx
+
             elif "DATE" == hdr:
                 col_ids["date"] = colx
             elif "Date" == hdr:
                 col_ids["date"] = colx
+
             elif "Date recorded" == hdr:
                 col_ids["dateRec"] = colx
+            elif "DATEDUE" == hdr:
+                col_ids["dateDue"] = colx
             elif "DATERETURN" == hdr:
                 col_ids["dateRet"] = colx
         return col_ids
@@ -225,10 +229,13 @@ class LoanInfo:
         year = self.get_date_data(sheet, rowx, colx, datemode)
 
         if year == 0:
-            colx = col_ids["dateRec"]
+            colx = col_ids["dateDue"]
             year = self.get_date_data(sheet, rowx, colx, datemode)
         if year == 0:
             colx = col_ids["dateRet"]
+            year = self.get_date_data(sheet, rowx, colx, datemode)
+        if year == 0:
+            colx = col_ids["dateRec"]
             year = self.get_date_data(sheet, rowx, colx, datemode)
         if year == 0:
             print("no date====== ", rowx)
@@ -280,8 +287,10 @@ class LoanInfo:
             newrec["year"] = copy.copy(year)
             newrec["magnitude"] = 0
             newrec["org names"] = {}
+            newrec["nameseq"] = []  # this is just for debugging
             self.conn_data[conn_key] = copy.copy(newrec)
 
+        self.conn_data[conn_key]["nameseq"].append(seq)
         self.conn_data[conn_key]["magnitude"] += 1
 
         orgName = self.name_data[seq]["inst"]

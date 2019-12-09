@@ -58,7 +58,7 @@ class geojsonfile:
             props["place"] = all_data[addr]["address"]
             props["year"] = all_data[addr]["year"]
             props["mag"] = float(all_data[addr]["magnitude"])
-
+            props["nameseq"] = all_data[addr]["nameseq"]
             coordinates = []
             coordinates.append(all_data[addr]["longitude"])
             coordinates.append(all_data[addr]["latitude"])
