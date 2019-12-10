@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     // Create panes for the decades
     // array of n panes -- one per decade from min decade to max decade
-    var panes = [];
+    let panes = [];
     let n_panes = (MAX_DECADE - MIN_DECADE)/10 + 1;
     for( let pane_index = 0; pane_index< n_panes; pane_index++) {
         // append new pane to the array
@@ -27,9 +27,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 
     // add options to the selector for all decades
-    for (var decade = MIN_DECADE; decade<=MAX_DECADE; decade += 10){
-        var opt = document.createElement('option');
-        var decade_str = "" + decade;
+    for (let decade = MIN_DECADE; decade<=MAX_DECADE; decade += 10){
+        let opt = document.createElement('option');
+        let decade_str = "" + decade;
         opt.value = decade_str;
         opt.innerHTML = decade_str;
         formSelect.appendChild(opt);
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 
     formSelect.onchange = function() {
-        var decade = this.value;
+        let decade = this.value;
         revealData(decade);
     }
 
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
     function revealData(decade){
         // decade to index
-        var new_p_index = (decade - MIN_DECADE)/10;
+        let new_p_index = (decade - MIN_DECADE)/10;
         if(new_p_index <0) {
             console.log("error new_pane_index " + new_p_index);
         }
@@ -77,12 +77,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
         show(new_p_index);
     }
 
+    // create popup tooltip info for each marker
+    // showing city name, years and institutons
     function onEachFeature(feature, layer) {
-        var popupContent = "";
-        var outloanInsts = [];
-        var outloanNum = [];
-        var inloanInsts = [];
-        var inloanNum = [];
+        let popupContent = "";
+        let outloanInsts = [];
+        let outloanNum = [];
+        let inloanInsts = [];
+        let inloanNum = [];
         if (feature.properties) {
             if( feature.properties.place) {
                 popupContent += feature.properties.place;
@@ -98,16 +100,17 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 popupContent += "<br>";
             }
             if( feature.properties.popupContent) {
-                for(var key in feature.properties.popupContent) {
-                    var loansdir = key.substr(0,1);
-                    var instname = key.substr(1);
+                for(let key in feature.properties.popupContent) {
+                    let loansdir = key.substr(0,1);
+                    let instname = key.substr(1);
+                    let quantity = feature.properties.popupContent[key];
                     if( loansdir == 'O'){
                         outloanInsts.push(instname);
-                        outloanNum.push(feature.properties.popupContent[key]);
+                        outloanNum.push(quantity);
                     }
                     if( loansdir == 'I'){
                         inloanInsts.push(instname);
-                        inloanNum.push(feature.properties.popupContent[key]);
+                        inloanNum.push(quantity);
                     }
                 }
                 if( outloanInsts.length > 0){
@@ -145,7 +148,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     //   and create a feature per address which aggregates input features
     //   for all years in the decade
     function build_decade_range (pane_index){
-        let decade_features = {}
+        let decade_features = {}  // accumulate the results in this
+
+        // the date range
         let decade_start = pane_index * 10 + MIN_DECADE;
         let decade_end = decade_start + 10;
         // scan the input features, looking for ones which are within the decade
@@ -160,17 +165,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 if(!(addr in decade_features)) {
                     decade_features[addr] = {"type": "Feature"};
                     decade_features[addr]["properties"] = Object.assign(feature.properties);
-                    decade_features[addr].properties.popupContent = Object.assign(feature.properties.popupContent);
                     decade_features[addr].properties["years"] = [feature.properties.year];
                     decade_features[addr]["geometry"] = feature.geometry;
                 } else {
                     let props = decade_features[addr]["properties"];
                     props.years.push(feature.properties.year);
 
-                    //for( var inst in Object.keys( props.popupContent)){
-                    for( var inst in props.popupContent){
-                        // is this inst in decade_features? create or merge
-                        if( !(inst in feature.properties.popupContent)){
+                    for( let inst in feature.properties.popupContent){
+                        // is this inst in decade_features? create or sum
+                        if( !(inst in props.popupContent)){
                             props.popupContent[inst] = 0;
                         }
                         props.popupContent[inst] += feature.properties.popupContent[inst];
@@ -187,18 +190,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
         decade_range.metadata = connData.metadata;
 
         // decade_features.forEach( function(feature, index, array) {
-        for( var dec_feature in decade_features){
+        for( let dec_feature in decade_features){
             decade_range.features.push(decade_features[dec_feature]);
         }
         return decade_range;
     }
 
     // disable the shadow
-    var icon = new L.Icon.Default();
+    let icon = new L.Icon.Default();
     icon.options.shadowSize = [0,0];
 
     // group the input features by address,decade
-    var year_ranges = [];
+    let year_ranges = [];
     year_ranges.metadata = connData.metadata;
 
     for( let pane_index = 0; pane_index< n_panes; pane_index++) {
@@ -215,11 +218,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
             onEachFeature: onEachFeature,
 
             pointToLayer: function (feature, latlng) {
-                var p_index = Math.floor((feature.properties.year - MIN_DECADE)/10);  // zzz check for float/int problems
+                let p_index = Math.floor((feature.properties.year - MIN_DECADE)/10);  // zzz check for float/int problems
                 if(p_index <0) {
                     console.log("error p_index " + p_index);
                 }
-                var pane = panes[p_index];
+                let pane = panes[p_index];
 
                 // using Henry Thasler's library
                 // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
