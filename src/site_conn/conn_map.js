@@ -58,11 +58,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     function hide(index) {
         // hide the markers
         panes[index].style.display = 'none';
-        // delete the polylines
-        polyDel(index);   // poly might not exist
     }
 
-    function polyDel(index){
+    function polyDel(){
         for(let i in map._layers) {
             if(map._layers[i]._path != undefined) {
                 try {
@@ -107,12 +105,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 
     function revealData(decade){
+        // delete the polylines
+        polyDel();
+
         // decade to index
         let new_p_index = (decade - MIN_DECADE)/10;
         if(new_p_index <0) {
             console.log("error new_pane_index " + new_p_index);
         }
-        // hide all old panes
+        // hide all old marker panes
         panes.forEach( function(value, index, array) {
             if(index != new_p_index) {
                 hide( index);
