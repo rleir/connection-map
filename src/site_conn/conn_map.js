@@ -56,11 +56,56 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 
     function hide(index) {
+        // hide the markers
         panes[index].style.display = 'none';
+        // delete the polylines
+        polyDel(index);   // poly might not exist
     }
+
+    function polyDel(index){
+        for(let i in map._layers) {
+            if(map._layers[i]._path != undefined) {
+                try {
+                    map.removeLayer(map._layers[i]);
+                }
+                catch(e) {
+                    console.log("problem with " + e + map._layers[i]);
+                }
+            }
+        }
+    }
+
     function show(index) {
+        // show the markers
         panes[index].style.display = '';
+        // create polylines
+        polyWrite(index);
     }
+
+    function polyWrite(index){
+        let decade_range = year_ranges[index];
+
+        L.geoJSON([decade_range], {
+
+            style: function (feature) {
+                return feature.properties && feature.properties.style;
+            },
+
+            pointToLayer: function (feature, latlng) {
+                // using Henry Thasler's library
+                // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
+                // an arc from ottawa to latlng
+                return L.geodesic([[[45.421, -75.697], latlng]], {
+                    weight: 2,
+                    opacity: 0.5,
+                    color: 'blue',
+                    steps: 50,
+                    wrap: false
+                });
+            }
+        }).addTo(map);
+    }
+
     function revealData(decade){
         // decade to index
         let new_p_index = (decade - MIN_DECADE)/10;
@@ -153,6 +198,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // the date range
         let decade_start = pane_index * 10 + MIN_DECADE;
         let decade_end = decade_start + 10;
+
         // scan the input features, looking for ones which are within the decade
         //  TODO: scan once, not many times
         connData.features.forEach( function(feature, index, array) {
@@ -205,6 +251,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     year_ranges.metadata = connData.metadata;
 
     for( let pane_index = 0; pane_index< n_panes; pane_index++) {
+        // start off with hidden markers
+        panes[pane_index].style.display = 'none';
+
         let decade_range = build_decade_range (pane_index);
         // append new pane to the array
         year_ranges.push( decade_range );
@@ -223,22 +272,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     console.log("error p_index " + p_index);
                 }
                 let pane = panes[p_index];
-
-                // using Henry Thasler's library
-                // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
-                // an arc from ottawa to latlng
-                L.geodesic([[[45.421, -75.697], latlng]], {
-                    weight: 2,
-                    opacity: 0.5,
-                    color: 'blue',
-                    steps: 50,
-                    pane: pane,
-                    wrap: false
-                }).addTo(map);
-
                 return L.marker(latlng, {
                     icon: icon,
-                    pane
+                    pane: panes[p_index]
                 });
             }
         }).addTo(map);
