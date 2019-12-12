@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
                 // an arc from ottawa to latlng
                 return L.geodesic([[[45.421, -75.697], latlng]], {
-                    weight: 2,
+                    weight: feature.properties.mag,
                     opacity: 0.5,
                     color: 'blue',
                     steps: 50,
