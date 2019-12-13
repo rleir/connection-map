@@ -90,13 +90,42 @@ document.addEventListener("DOMContentLoaded", function(event) {
             },
 
             pointToLayer: function (feature, latlng) {
+                let colors = ['#865f00', '#d10068', '#b42f54'];
+                let dashArrays= [ "4, 1", "2, 1", "8, 1"];
+
+                let outloan = false;
+                let  inloan = false;
+                if( feature.properties.popupContent) {
+                    for(let key in feature.properties.popupContent) {
+                        let loansdir = key.substr(0,1);
+                        if( loansdir == 'O'){
+                            outloan = true;
+                        }
+                        else if( loansdir == 'I'){
+                            inloan = true;
+                        }
+                    }
+                }
+                // just  inloan 0
+                // just outloan 1
+                // both in and out 2
+                // neither: assumed not possible
+                let colorx = 0;
+                if(outloan){
+                    colorx++;
+                    if(inloan) {
+                        colorx++;
+                    }
+                }
                 // using Henry Thasler's library
                 // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
                 // an arc from ottawa to latlng
                 return L.geodesic([[[45.421, -75.697], latlng]], {
-                    weight: feature.properties.mag,
+                    weight: 2 * feature.properties.mag,
                     opacity: 0.5,
-                    color: 'blue',
+                    color: colors[colorx],
+                    dashArray: dashArrays[colorx],
+                    dashOffset: "1",
                     steps: 50,
                     wrap: false
                 });
