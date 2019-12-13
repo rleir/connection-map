@@ -14,45 +14,46 @@ document.addEventListener("DOMContentLoaded", function(event) {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    const MAX_DECADE = 2030;
-    const MIN_DECADE = 1960;  // this can be older when paper records have been transcribed
+    const MAX_YEAR_RANGE = 2020;
+    const MIN_YEAR_RANGE = 1960;  // this can be older when paper records have been transcribed
+    const YEAR_RANGE_SIZE = 5;
 
-    // Create panes for the decades
-    // array of n panes -- one per decade from min decade to max decade
+    // Create panes for the year_ranges
+    // array of n panes -- one per year_range from min year_range to max year_range
     let panes = [];
-    let n_panes = (MAX_DECADE - MIN_DECADE)/10 + 1;
+    let n_panes = (MAX_YEAR_RANGE - MIN_YEAR_RANGE)/YEAR_RANGE_SIZE + 1;
     for( let pane_index = 0; pane_index< n_panes; pane_index++) {
         // append new pane to the array
         panes.push( map.createPane('pane'+pane_index));
     }
 
-    // add options to the selector for all decades
-    for (let decade = MIN_DECADE; decade<=MAX_DECADE; decade += 10){
+    // add options to the selector for all year_ranges
+    for (let year_range = MIN_YEAR_RANGE; year_range<=MAX_YEAR_RANGE; year_range += YEAR_RANGE_SIZE){
         let opt = document.createElement('option');
-        let decade_str = "" + decade;
-        opt.value = decade_str;
-        opt.innerHTML = decade_str;
+        let year_range_str = "" + year_range;
+        opt.value = year_range_str;
+        opt.innerHTML = year_range_str;
         formSelect.appendChild(opt);
     }
 
     formButton.onclick = function() {
-        let decade_str = formSelect.options[ formSelect.selectedIndex].text;
-        let decade = Number(decade_str)
+        let year_range_str = formSelect.options[ formSelect.selectedIndex].text;
+        let year_range = Number(year_range_str)
 
-        if( decade >= MAX_DECADE) {
-            decade = MIN_DECADE;
+        if( year_range >= MAX_YEAR_RANGE) {
+            year_range = MIN_YEAR_RANGE;
         } else {
-            decade += 10;
+            year_range += YEAR_RANGE_SIZE;
         }
         // update the selector
-        formSelect.value = "" + decade;
+        formSelect.value = "" + year_range;
 
-        revealData(decade);
+        revealData(year_range);
     }
 
     formSelect.onchange = function() {
-        let decade = this.value;
-        revealData(decade);
+        let year_range = this.value;
+        revealData(year_range);
     }
 
     function hide(index) {
@@ -81,9 +82,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     }
 
     function polyWrite(index){
-        let decade_range = year_ranges[index];
+        let year_range_range = year_ranges[index];
 
-        L.geoJSON([decade_range], {
+        L.geoJSON([year_range_range], {
 
             style: function (feature) {
                 return feature.properties && feature.properties.style;
@@ -133,12 +134,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }).addTo(map);
     }
 
-    function revealData(decade){
+    function revealData(year_range){
         // delete the polylines
         polyDel();
 
-        // decade to index
-        let new_p_index = (decade - MIN_DECADE)/10;
+        // year_range to index
+        let new_p_index = (year_range - MIN_YEAR_RANGE)/YEAR_RANGE_SIZE;
         if(new_p_index <0) {
             console.log("error new_pane_index " + new_p_index);
         }
@@ -219,36 +220,36 @@ document.addEventListener("DOMContentLoaded", function(event) {
         layer.bindTooltip(popupContent); // or bindPopup
     }
 
-    // get the input features in a decade,
+    // get the input features in a year_range,
     //   and create a feature per address which aggregates input features
-    //   for all years in the decade
-    function build_decade_range (pane_index){
-        let decade_features = {}  // accumulate the results in this
+    //   for all years in the year_range
+    function build_year_range_range (pane_index){
+        let year_range_features = {}  // accumulate the results in this
 
         // the date range
-        let decade_start = pane_index * 10 + MIN_DECADE;
-        let decade_end = decade_start + 10;
+        let year_range_start = pane_index * YEAR_RANGE_SIZE + MIN_YEAR_RANGE;
+        let year_range_end = year_range_start + YEAR_RANGE_SIZE;
 
-        // scan the input features, looking for ones which are within the decade
+        // scan the input features, looking for ones which are within the year_range
         //  TODO: scan once, not many times
         connData.features.forEach( function(feature, index, array) {
             let year = feature.properties.year;
-            if(year >= decade_start &&
-               year < decade_end ){
+            if(year >= year_range_start &&
+               year < year_range_end ){
                 let addr = feature.properties.place;
-                // is this in  decade_features? create or deep merge
-                //if(!(addr in Object.keys(decade_features))) {
-                if(!(addr in decade_features)) {
-                    decade_features[addr] = {"type": "Feature"};
-                    decade_features[addr]["properties"] = Object.assign(feature.properties);
-                    decade_features[addr].properties["years"] = [feature.properties.year];
-                    decade_features[addr]["geometry"] = feature.geometry;
+                // is this in  year_range_features? create or deep merge
+                //if(!(addr in Object.keys(year_range_features))) {
+                if(!(addr in year_range_features)) {
+                    year_range_features[addr] = {"type": "Feature"};
+                    year_range_features[addr]["properties"] = Object.assign(feature.properties);
+                    year_range_features[addr].properties["years"] = [feature.properties.year];
+                    year_range_features[addr]["geometry"] = feature.geometry;
                 } else {
-                    let props = decade_features[addr]["properties"];
+                    let props = year_range_features[addr]["properties"];
                     props.years.push(feature.properties.year);
 
                     for( let inst in feature.properties.popupContent){
-                        // is this inst in decade_features? create or sum
+                        // is this inst in year_range_features? create or sum
                         if( !(inst in props.popupContent)){
                             props.popupContent[inst] = 0;
                         }
@@ -258,25 +259,25 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
         });
 
-        let decade_range = {
+        let year_range_range = {
             "type": "FeatureCollection",
             "metadata": {},
             "features": []
         };
-        decade_range.metadata = connData.metadata;
+        year_range_range.metadata = connData.metadata;
 
-        // decade_features.forEach( function(feature, index, array) {
-        for( let dec_feature in decade_features){
-            decade_range.features.push(decade_features[dec_feature]);
+        // year_range_features.forEach( function(feature, index, array) {
+        for( let dec_feature in year_range_features){
+            year_range_range.features.push(year_range_features[dec_feature]);
         }
-        return decade_range;
+        return year_range_range;
     }
 
     // disable the shadow
     let icon = new L.Icon.Default();
     icon.options.shadowSize = [0,0];
 
-    // group the input features by address,decade
+    // group the input features by address,year_range
     let year_ranges = [];
     year_ranges.metadata = connData.metadata;
 
@@ -284,11 +285,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // start off with hidden markers
         panes[pane_index].style.display = 'none';
 
-        let decade_range = build_decade_range (pane_index);
+        let year_range_range = build_year_range_range (pane_index);
         // append new pane to the array
-        year_ranges.push( decade_range );
+        year_ranges.push( year_range_range );
 
-        L.geoJSON([decade_range], {
+        L.geoJSON([year_range_range], {
 
             style: function (feature) {
                 return feature.properties && feature.properties.style;
@@ -297,7 +298,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             onEachFeature: onEachFeature,
 
             pointToLayer: function (feature, latlng) {
-                let p_index = Math.floor((feature.properties.year - MIN_DECADE)/10);  // zzz check for float/int problems
+                let p_index = Math.floor((feature.properties.year - MIN_YEAR_RANGE)/YEAR_RANGE_SIZE);  // zzz check for float/int problems
                 if(p_index <0) {
                     console.log("error p_index " + p_index);
                 }
