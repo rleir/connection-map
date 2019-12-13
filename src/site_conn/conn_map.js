@@ -302,7 +302,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 if(p_index <0) {
                     console.log("error p_index " + p_index);
                 }
-                let pane = panes[p_index];
                 return L.marker(latlng, {
                     icon: icon,
                     pane: panes[p_index]
