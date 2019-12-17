@@ -91,8 +91,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
             },
 
             pointToLayer: function (feature, latlng) {
-                let colors = ['#865f00', '#d10068', '#b42f54'];
-                let dashArrays= [ "40, 10", "20, 10", "8, 1"];
+                let colors = ['#0041ff', '#ff00ff', '#ff004f'];
+                let dashArrays= [ "20, 5", "10, 5", "20, 1"];
 
                 let outloan = false;
                 let  inloan = false;
@@ -129,7 +129,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     steps: 50,
                     wrap: false
                 });
-                //  dashOffset: "1",
             }
         }).addTo(map);
     }
