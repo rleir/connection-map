@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // append new pane to the array
         panes.push( map.createPane('pane'+pane_index));
     }
-
+    //----- controls ------
     // add options to the selector for all year_ranges
     for (let year_range = MIN_YEAR_RANGE; year_range<=MAX_YEAR_RANGE; year_range += YEAR_RANGE_SIZE){
         let opt = document.createElement('option');
@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
         opt.innerHTML = year_range_str;
         formSelect.appendChild(opt);
     }
-
     formButton.onclick = function() {
         let year_range_str = formSelect.options[ formSelect.selectedIndex].text;
         let year_range = Number(year_range_str)
@@ -47,10 +46,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
         // update the selector
         formSelect.value = "" + year_range;
-
         revealData(year_range);
     }
-
     formSelect.onchange = function() {
         let year_range = this.value;
         revealData(year_range);
@@ -60,8 +57,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // hide the markers
         panes[index].style.display = 'none';
     }
-
     function polyDel(){
+        // delete the polylines
         for(let i in map._layers) {
             if(map._layers[i]._path != undefined) {
                 try {
@@ -73,14 +70,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
         }
     }
-
+    // Show all the markers and polylines for the selected date range
     function show(index) {
         // show the markers
         panes[index].style.display = '';
         // create polylines
         polyWrite(index);
     }
-
+    // Write all the polylines for the selected date range
     function polyWrite(index){
         let year_range_range = year_ranges[index];
 
@@ -107,10 +104,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
                         }
                     }
                 }
-                // just  inloan 0
-                // just outloan 1
-                // both in and out 2
-                // neither: assumed not possible
+                //        inloan outloan inandout  (neither: assumed not possible)
+                // colorx     0      1       2          x
                 let colorx = 0;
                 if(outloan){
                     colorx++;
@@ -122,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 // https://www.thasler.com/leaflet.geodesic/example/interactive-noWrap.html
                 // an arc from ottawa to latlng
                 return L.geodesic([[[45.421, -75.697], latlng]], {
-                    weight: 2 * feature.properties.mag,
+                    weight: 1 + Number(Math.log( feature.properties.magsum)),
                     opacity: 0.5,
                     color: colors[colorx],
                     dashArray: dashArrays[colorx],
@@ -132,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
         }).addTo(map);
     }
-
+    // Hide old markers and polylines, and display new
     function revealData(year_range){
         // delete the polylines
         polyDel();
@@ -242,11 +237,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     year_range_features[addr] = {"type": "Feature"};
                     year_range_features[addr]["properties"] = Object.assign(feature.properties);
                     year_range_features[addr].properties["years"] = [feature.properties.year];
+                    year_range_features[addr].properties["magsum"] = [feature.properties.mag];
                     year_range_features[addr]["geometry"] = feature.geometry;
                 } else {
                     let props = year_range_features[addr]["properties"];
                     props.years.push(feature.properties.year);
-
+                    props.magsum += [feature.properties.mag];
                     for( let inst in feature.properties.popupContent){
                         // is this inst in year_range_features? create or sum
                         if( !(inst in props.popupContent)){
@@ -297,7 +293,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             onEachFeature: onEachFeature,
 
             pointToLayer: function (feature, latlng) {
-                let p_index = Math.floor((feature.properties.year - MIN_YEAR_RANGE)/YEAR_RANGE_SIZE);  // zzz check for float/int problems
+                let p_index = Math.floor((feature.properties.year - MIN_YEAR_RANGE)/YEAR_RANGE_SIZE);
                 if(p_index <0) {
                     console.log("error p_index " + p_index);
                 }
