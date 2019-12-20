@@ -121,6 +121,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     opacity: 0.5,
                     color: colors[colorx],
                     dashArray: dashArrays[colorx],
+                    lineCap: 'butt',
                     steps: 50,
                     wrap: false
                 });
