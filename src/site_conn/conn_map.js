@@ -27,6 +27,40 @@ document.addEventListener("DOMContentLoaded", function(event) {
         panes.push( map.createPane('pane'+pane_index));
     }
     //----- controls ------
+
+    // Time
+    var dataTime = d3.range(0, 14).map(function(d) {
+        return new Date(1960 + d*5, 10, 3);
+    });
+
+    var sliderTime = d3
+        .sliderBottom()
+        .min(d3.min(dataTime))
+        .max(d3.max(dataTime))
+        .step(1000 * 60 * 60 * 24 * 365)
+        .width(300)
+        .tickFormat(d3.timeFormat('%Y'))
+        .tickValues(dataTime)
+        .default(new Date(1998, 10, 3))
+        .on('onchange', val => {
+            let year = d3.timeFormat('%Y')(val)
+            d3.select('p#value-time').text(year);
+            revealData(d3.timeFormat('%Y')(val));
+        });
+
+    var gTime = d3
+        .select('div#slider-time')
+        .append('svg')
+        .attr('width', 500)
+        .attr('height', 100)
+        .append('g')
+        .attr('transform', 'translate(30,30)');
+
+    gTime.call(sliderTime);
+
+    d3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
+    //----- controls d3 end ------
+
     // add options to the selector for all year_ranges
     for (let year_range = MIN_YEAR_RANGE; year_range<=MAX_YEAR_RANGE; year_range += YEAR_RANGE_SIZE){
         let opt = document.createElement('option');
@@ -52,6 +86,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         let year_range = this.value;
         revealData(year_range);
     }
+    //----- controls end ------
 
     function hide(index) {
         // hide the markers
@@ -133,10 +168,20 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // delete the polylines
         polyDel();
 
+        // temp zzz force it to a multiple of 5
+        let remd = year_range % 5;
+        if(remd != 0){
+            year_range = year_range - remd;
+            // zzz display the modified year_range? snap the slider?
+        }
         // year_range to index
+        // zzz
+        if(year_range > MAX_YEAR_RANGE){
+            throw("error year_range " + year_range);
+        }
         let new_p_index = (year_range - MIN_YEAR_RANGE)/YEAR_RANGE_SIZE;
         if(new_p_index <0) {
-            console.log("error new_pane_index " + new_p_index);
+            throw("error new_pane_index " + new_p_index);
         }
         // hide all old marker panes
         panes.forEach( function(value, index, array) {
