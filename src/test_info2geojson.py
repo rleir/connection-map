@@ -22,6 +22,18 @@ def init_test_loc_file():
     copyfile(test_initlocFileName, test_locFileName)
 
 
+def ensure_newline(fname):
+    '''ensure that a file is terminated with a newline '''
+    f = open(fname)
+    flist = f.readline()
+    f.close()
+    if not flist.endswith("\n"):
+        flist += "\n"
+        f = open(fname, "w")
+        f.write(flist)
+        f.close()
+
+
 def test_open_json():
     init_test_loc_file()
 
@@ -85,6 +97,7 @@ def test_few_loans():
     assert filecmp.cmp(test_tempdbg,
                        "testData/tempdbgRef.json", shallow=False)
 
+    ensure_newline(test_conns_json)
     assert filecmp.cmp(test_conns_json,
                        "testData/LoanConnsTestRef.json", shallow=False)
     return True
