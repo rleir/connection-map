@@ -3,5 +3,6 @@ before_install:
   - pip3 install pytest
   - pip3 install xlrd
   - pip3 install geopy
+  - export TZ=America/Toronto
 install: ./install-dependencies.sh
 script: cd src; pytest; cat testData/LoanConnsTest.json
