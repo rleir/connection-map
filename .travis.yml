@@ -4,4 +4,4 @@ before_install:
   - pip3 install xlrd
   - pip3 install geopy
 install: ./install-dependencies.sh
-script: cd src; pytest
+script: cd src; pytest; cat testData/LoanConnsTest.json
