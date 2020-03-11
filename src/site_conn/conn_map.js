@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         event.preventDefault()
     });
 
-    var map = L.map('map').setView([30.5, -0.09], 2);
+    var map = L.map('map').setView([30.5, -0.09], 3);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -26,40 +26,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // append new pane to the array
         panes.push( map.createPane('pane'+pane_index));
     }
-    //----- controls ------
-
-    // Time
-    var dataTime = d3.range(0, 14).map(function(d) {
-        return new Date(1960 + d*5, 10, 3);
-    });
-
-    var sliderTime = d3
-        .sliderBottom()
-        .min(d3.min(dataTime))
-        .max(d3.max(dataTime))
-        .step(1000 * 60 * 60 * 24 * 365)
-        .width(300)
-        .tickFormat(d3.timeFormat('%Y'))
-        .tickValues(dataTime)
-        .default(new Date(1998, 10, 3))
-        .on('onchange', val => {
-            let year = d3.timeFormat('%Y')(val)
-            d3.select('p#value-time').text(year);
-            revealData(d3.timeFormat('%Y')(val));
-        });
-
-    var gTime = d3
-        .select('div#slider-time')
-        .append('svg')
-        .attr('width', 500)
-        .attr('height', 100)
-        .append('g')
-        .attr('transform', 'translate(30,30)');
-
-    gTime.call(sliderTime);
-
-    d3.select('p#value-time').text(d3.timeFormat('%Y')(sliderTime.value()));
-    //----- controls d3 end ------
 
     // add options to the selector for all year_ranges
     for (let year_range = MIN_YEAR_RANGE; year_range<=MAX_YEAR_RANGE; year_range += YEAR_RANGE_SIZE){
@@ -69,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         opt.innerHTML = year_range_str;
         formSelect.appendChild(opt);
     }
+
     formButton.onclick = function() {
         let year_range_str = formSelect.options[ formSelect.selectedIndex].text;
         let year_range = Number(year_range_str)
@@ -80,8 +47,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
         // update the selector
         formSelect.value = "" + year_range;
+
         revealData(year_range);
     }
+
     formSelect.onchange = function() {
         let year_range = this.value;
         revealData(year_range);
@@ -92,6 +61,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         // hide the markers
         panes[index].style.display = 'none';
     }
+
     function polyDel(){
         // delete the polylines
         for(let i in map._layers) {
@@ -123,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
             },
 
             pointToLayer: function (feature, latlng) {
-                let colors = ['#0041ff', '#ff00ff', '#ff004f'];
+                let colors = ['#865f00', '#d10068', '#b42f54'];
                 let dashArrays= [ "20, 5", "10, 5", "20, 1"];
 
                 let outloan = false;
@@ -139,8 +109,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
                         }
                     }
                 }
-                //        inloan outloan inandout  (neither: assumed not possible)
-                // colorx     0      1       2          x
+                // just  inloan 0
+                // just outloan 1
+                // both in and out 2
+                // neither: assumed not possible
                 let colorx = 0;
                 if(outloan){
                     colorx++;
@@ -167,7 +139,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     function revealData(year_range){
         // delete the polylines
         polyDel();
-
         // temp zzz force it to a multiple of 5
         let remd = year_range % 5;
         if(remd != 0){
@@ -175,10 +146,11 @@ document.addEventListener("DOMContentLoaded", function(event) {
             // zzz display the modified year_range? snap the slider?
         }
         // year_range to index
-        // zzz
         if(year_range > MAX_YEAR_RANGE){
             throw("error year_range " + year_range);
         }
+
+        // year_range to index
         let new_p_index = (year_range - MIN_YEAR_RANGE)/YEAR_RANGE_SIZE;
         if(new_p_index <0) {
             throw("error new_pane_index " + new_p_index);
@@ -353,5 +325,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     // the initial load
     revealData(formSelect.options[ formSelect.selectedIndex].text);
+
+    // the legend
+    const params = new URLSearchParams(document.location.search);
+    const l = params.get("l");
+    var para_name = "";
+    if(l === "fr"){
+        //display:none
+        para_name = "fr_para";
+    } else {
+        para_name = "en_para";
+    }
+    var x = document.getElementById(para_name);
+    x.style.display = "block";
 });
 
