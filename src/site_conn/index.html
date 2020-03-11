@@ -13,33 +13,60 @@
 
     <script src="loan_conns_geojson.js"></script>
 	<style>
-		html, body {
-			height: 100%;
-			margin: 0;
-		}
-		#map {
-			width: 900px;
-			height: 500px;
-		}
+        body {
+           padding: 0;
+           margin: 0;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100vw;
+        }
+        #controls {
+            padding: 10px;
+        }
+        #legend, #controls {
+            z-index: 500;
+            position:relative;
+            float:right;
+            display:block;
+            background: rgba(250, 250, 250, 0.5);
+	    }
+        p {
+            display:none
+        }
 	</style>
 	
 </head>
 <body>
+  
+
+  <!-- Create an element where the map will take place -->
+    <div id='map'>
+    <div id='legend'>
+      <p id='en_para'> &nbsp; &nbsp; Each arc represents loans
+        to and/or from the Canadian Museum of Nature
+        to a university or research organization
+        world-wide, since 1960.
+        Hover over an arc's destination! &nbsp; &nbsp; </p>
+
+      <p id='fr_para'>  &nbsp; &nbsp; Chaque arc représente des prêts accordés
+         au Musée canadien de la nature
+        et / ou par celui-ci à une université ou un organisme de recherche
+        du monde entier, depuis 1960.
+        Survolez la destination d'un arc!  &nbsp; &nbsp; </p>
+    </div>
     <div id="controls">
       <form>
-        <label>Decade</label>
+        <label>Five Year Span</label>
         <button id="a-button">Next
         </button>
         <select id="year-select">
         </select>
       </form>
     </div>
+    </div>
 
-  <!-- Create an element where the map will take place -->
-  <div id='map'></div>
-<p>Each arc represents loans to and/or from the Canadian Museum of Nature to a university or research organization worldwide.</p>
-<p>Hover over an arc's destination!</p>
+    <script src="conn_map.js"></script>
 </body>
 </html>
 
-<script src="conn_map.js"></script>
